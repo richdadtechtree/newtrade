@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>서울 & 수도권 거래량 - 연도별 통계</title>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-75SPDY6N8V"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-75SPDY6N8V');
+  </script>
+
+  <style>
+    :root{
+      --bg:#0b0c10; --card:#151822; --text:#e8eaf0; --muted:#96a0b5;
+      --accent:#4caf50; --accent-weak:#3a8f40; --tab:rgba(255,255,255,.06);
+      --tab-active:linear-gradient(180deg, rgba(76,175,80,.18), rgba(76,175,80,.06));
+      --ring:rgba(76,175,80,.35);
+      --year-2025:#3b82f6; --year-2024:#10b981; --year-2023:#f59e0b;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",Arial,sans-serif;
+      background:linear-gradient(180deg,#0b0c10 0%,#0f1220 100%); color:var(--text);
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    }
+    header{
+      position:sticky; top:0; z-index:10;
+      backdrop-filter:saturate(150%) blur(8px);
+      background:rgba(11,12,16,.6);
+      border-bottom:1px solid rgba(255,255,255,.06)
+    }
+    .wrap{max-width:1080px; margin:0 auto; padding:18px 16px}
+    h1{margin:0; font-size:clamp(24px, 3.5vw, 32px); letter-spacing:-.3px; font-weight:800}
+    .sub{color:var(--muted); font-size:14px; margin-top:6px}
+
+    .header-top{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:4px}
+
+    /* 뒤로가기 버튼 */
+    .back-btn{
+      display:inline-flex; align-items:center; gap:8px; padding:10px 16px;
+      background:var(--tab); border:1px solid rgba(255,255,255,.06);
+      border-radius:10px; color:var(--text); text-decoration:none;
+      font-size:14px; font-weight:600; transition:all .2s ease;
+    }
+    .back-btn:hover{
+      background:var(--tab-active);
+      transform:translateX(-4px);
+      border-color:var(--accent-weak);
+    }
+
+    /* 블럭 카드 그리드 */
+    .block-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));
+      gap:20px;
+      margin-top:32px;
+      padding-bottom:48px;
+    }
+
+    .block-card{
+      background:var(--card);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:18px;
+      padding:36px 28px;
+      cursor:pointer;
+      transition:all .3s ease;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .block-card::before{
+      content:'';
+      position:absolute;
+      top:0; left:0; right:0; bottom:0;
+      opacity:0;
+      transition:opacity .3s ease;
+    }
+
+    .block-card.year-2025::before{
+      background:linear-gradient(135deg, rgba(59,130,246,.12) 0%, rgba(59,130,246,.02) 100%);
+    }
+
+    .block-card.year-2024::before{
+      background:linear-gradient(135deg, rgba(16,185,129,.12) 0%, rgba(16,185,129,.02) 100%);
+    }
+
+    .block-card.year-2023::before{
+      background:linear-gradient(135deg, rgba(245,158,11,.12) 0%, rgba(245,158,11,.02) 100%);
+    }
+
+    .block-card:hover{
+      transform:translateY(-8px);
+      box-shadow:0 12px 40px rgba(0,0,0,.35);
+    }
+
+    .block-card.year-2025:hover{
+      border-color:rgba(59,130,246,.6);
+      box-shadow:0 12px 40px rgba(59,130,246,.25);
+    }
+
+    .block-card.year-2024:hover{
+      border-color:rgba(16,185,129,.6);
+      box-shadow:0 12px 40px rgba(16,185,129,.25);
+    }
+
+    .block-card.year-2023:hover{
+      border-color:rgba(245,158,11,.6);
+      box-shadow:0 12px 40px rgba(245,158,11,.25);
+    }
+
+    .block-card:hover::before{
+      opacity:1;
+    }
+
+    .block-icon{
+      font-size:56px;
+      margin-bottom:20px;
+      display:block;
+      filter:drop-shadow(0 4px 8px rgba(0,0,0,.2));
+    }
+
+    .block-year{
+      font-size:36px;
+      font-weight:900;
+      margin:0 0 12px 0;
+      color:var(--text);
+      position:relative;
+      z-index:1;
+      letter-spacing:-1px;
+    }
+
+    .block-card.year-2025 .block-year{
+      color:#60a5fa;
+    }
+
+    .block-card.year-2024 .block-year{
+      color:#34d399;
+    }
+
+    .block-card.year-2023 .block-year{
+      color:#fbbf24;
+    }
+
+    .block-title{
+      font-size:20px;
+      font-weight:700;
+      margin:0 0 8px 0;
+      color:var(--text);
+      position:relative;
+      z-index:1;
+    }
+
+    .block-desc{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.6;
+      margin:0;
+      position:relative;
+      z-index:1;
+    }
+
+    footer.page{
+      border-top:1px solid rgba(255,255,255,.06);
+      text-align:center;
+      color:var(--muted);
+      font-size:13px;
+      padding:28px 0 36px
+    }
+    footer.page a{color:#cfe6ff; text-decoration:none}
+
+    @media (max-width:640px){
+      .block-grid{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <a href="단지랭킹.html" class="back-btn">← 단지랭킹으로</a>
+      <div class="header-top" style="margin-top:12px">
+        <div>
+          <h1>서울 & 수도권 거래량</h1>
+          <div class="sub">연도별 아파트 거래량 통계</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="block-grid">
+      <!-- 2025년 거래량 -->
+      <div class="block-card year-2025" onclick="location.href='2025거래량.html'">
+        <span class="block-icon">📊</span>
+        <div class="block-year">2025년</div>
+        <h3 class="block-title">2025년 거래량</h3>
+        <p class="block-desc">서울·경기·인천 지역의 2025년 아파트 거래량 데이터</p>
+      </div>
+
+      <!-- 2024년 거래량 -->
+      <div class="block-card year-2024" onclick="location.href='2024거래량.html'">
+        <span class="block-icon">📈</span>
+        <div class="block-year">2024년</div>
+        <h3 class="block-title">2024년 거래량</h3>
+        <p class="block-desc">서울·경기·인천 지역의 2024년 아파트 거래량 데이터</p>
+      </div>
+
+      <!-- 2023년 거래량 -->
+      <div class="block-card year-2023" onclick="location.href='2023거래량.html'">
+        <span class="block-icon">📉</span>
+        <div class="block-year">2023년</div>
+        <h3 class="block-title">2023년 거래량</h3>
+        <p class="block-desc">서울·경기·인천 지역의 2023년 아파트 거래량 데이터</p>
+      </div>
+    </div>
+
+    <footer class="page">
+      <div><strong>협업 및 수정 문의</strong> · <a href="https://litt.ly/richdadtechtree" target="_blank" rel="noopener">https://litt.ly/richdadtechtree</a></div>
+    </footer>
+  </main>
+</body>
+</html>
