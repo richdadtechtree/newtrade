@@ -39,14 +39,6 @@
 
     .header-top{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:4px}
 
-    /* 방문자 카운터 스타일 */
-    .visitor-badge{
-      display:inline-flex; align-items:center; gap:8px; padding:8px 14px;
-      background:rgba(76,175,80,.12); border:1px solid rgba(76,175,80,.25);
-      border-radius:999px; font-size:13px; font-weight:600; color:var(--text)
-    }
-    .visitor-badge span{color:var(--accent); font-weight:700}
-
     /* 블럭 카드 그리드 */
     .block-grid{
       display:grid;
@@ -129,18 +121,9 @@
 <body>
   <header>
     <div class="wrap">
-      <div class="header-top">
-        <div>
-          <h1>부동산 신고가 & 단지랭킹</h1>
-          <div class="sub">전국 아파트 신고가 정보와 지역별 단지 순위를 한눈에</div>
-        </div>
-        <!-- 방문자 카운터 -->
-        <div class="visitor-badge">
-          👥 총 방문자
-          <a href="https://www.hitwebcounter.com/" target="_blank">
-            <img src="https://hitwebcounter.com/counter/counter.php?page=21456976&style=0010&nbdigits=5&type=page&initCount=0" title="총 방문자" alt="총 방문자" border="0" style="vertical-align:middle; height:14px;"/>
-          </a>
-        </div>
+      <div>
+        <h1>부동산 신고가 & 단지랭킹</h1>
+        <div class="sub">전국 아파트 신고가 정보와 지역별 단지 순위를 한눈에</div>
       </div>
     </div>
   </header>
