@@ -3,7 +3,7 @@
         <head>
         <meta charset="utf-8"/>
         <meta content="width=device-width, initial-scale=1" name="viewport"/>
-        <title>서울 &amp; 수도권 신고가 - 2026-03-14 10:46</title>
+        <title>서울 &amp; 수도권 신고가 - 2026-03-16 04:39</title>
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
         <style>
           :root {
@@ -400,6 +400,75 @@
           .compare-count strong {
             color: #f5576c;
           }
+
+          /* 트리맵 상승률 모달 */
+          .treemap-modal {
+            display: none; position: fixed; z-index: 1000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            overflow: auto; background-color: rgba(0,0,0,0.7);
+          }
+          .treemap-modal-content {
+            background: #1a1a2e; margin: 3% auto; border-radius: 20px;
+            width: 95%; max-width: 1100px; max-height: 90vh;
+            overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column;
+          }
+          .treemap-modal-header {
+            padding: 18px 28px;
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: #fff; display: flex; justify-content: space-between; align-items: center;
+          }
+          .treemap-modal-header h2 { margin: 0; font-size: 1.3em; color: #fff; }
+          .treemap-modal-close {
+            font-size: 2em; font-weight: bold; cursor: pointer;
+            color: #fff; line-height: 1; transition: transform 0.2s;
+          }
+          .treemap-modal-close:hover { transform: scale(1.2); }
+          .treemap-modal-body { padding: 16px; overflow-y: auto; flex: 1; }
+          #treemapContainer {
+            position: relative; width: 100%;
+            height: 520px; background: #0d1117; border-radius: 12px; overflow: hidden;
+          }
+          .treemap-block {
+            position: absolute; box-sizing: border-box;
+            border: 2px solid rgba(255,255,255,0.08);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            cursor: pointer; transition: filter 0.15s;
+            overflow: hidden; border-radius: 4px;
+          }
+          .treemap-block:hover { filter: brightness(1.2); z-index: 10; }
+          .treemap-region {
+            font-size: 11px; color: rgba(255,255,255,0.75);
+            font-weight: 500; text-align: center; line-height: 1.2;
+            padding: 0 4px; margin-bottom: 2px;
+          }
+          .treemap-name {
+            font-size: 13px; font-weight: 700; color: #fff;
+            text-align: center; line-height: 1.3;
+            padding: 0 6px; word-break: keep-all;
+          }
+          .treemap-rate {
+            font-size: 15px; font-weight: 800; color: #fff;
+            margin-top: 4px;
+          }
+          .treemap-tooltip {
+            position: fixed; background: rgba(0,0,0,0.92); color: #fff;
+            padding: 10px 14px; border-radius: 10px; font-size: 13px;
+            pointer-events: none; z-index: 9999; display: none;
+            line-height: 1.6; max-width: 260px;
+            border: 1px solid rgba(255,255,255,0.15);
+          }
+          .tm-filter-btn {
+            padding: 6px 18px; border-radius: 999px; border: 2px solid rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.08); color: #fff; font-size: 13px;
+            font-weight: 600; cursor: pointer; transition: all 0.18s;
+          }
+          .tm-filter-btn:hover { background: rgba(255,255,255,0.18); }
+          .tm-filter-btn.tm-active {
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+            border-color: #dc2626; color: #fff;
+          }
         </style>
         </head>
         <body>
@@ -408,18 +477,21 @@
           <div class="page">
             <header class="header">
               <h1>서울 &amp; 수도권 신고가</h1>
-              <p class="sub">2026-03-14 10:46 기준 · 총 88개 아파트</p>
+              <p class="sub">2026-03-16 04:39 기준 · 총 4개 아파트</p>
 
               <!-- 상단 칩: 연식별 필터 및 그래프 버튼 -->
               <div class="chips">
-                <span class="chip" id="chip-old">2000년대 미만 28건</span>
-                <span class="chip" id="chip-very-young">입주 5년 이하 14건</span>
-                <span class="chip" id="chip-young">입주 10년 이하 22건</span>
+                <span class="chip" id="chip-old">2000년대 미만 1건</span>
+                <span class="chip" id="chip-very-young">입주 5년 이하 1건</span>
+                <span class="chip" id="chip-young">입주 10년 이하 1건</span>
                 <span class="chip chip-graph" id="chip-quintile-graph" style="background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border: none; font-weight: 600;">
                   📊 신고가 분위그래프
                 </span>
                 <span class="chip chip-compare" id="chip-compare" style="background: linear-gradient(135deg, #f093fb, #f5576c); color: #fff; border: none; font-weight: 600;">
                   🔗 비교단지 묶기
+                </span>
+                <span class="chip chip-treemap" id="chip-treemap" style="background: linear-gradient(135deg, #11998e, #38ef7d); color: #fff; border: none; font-weight: 600;">
+                  🗺️ 맵으로 상승률 보기
                 </span>
               </div>
 
@@ -470,41 +542,19 @@
 
             <section class="cards" id="cards">
               
-            <section class="card" data-region="서울특별시 강남구"
-                     data-build-year="2015" data-young="0"
-                     data-very-young="0" data-old="0" data-area="151"
-                     data-kakao-query="강남구 대치동 래미안대치팰리스 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>래미안대치팰리스 <span class='year-badge'>2015년</span> <span class="tag">전용면적 151㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 강남구 대치동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
+            <section class="card" data-region="서울특별시 서초구"
+                     data-build-year="2006" data-young="0"
+                     data-very-young="0" data-old="0" data-area="84"
+                     data-kakao-query="서초구 서초동 경남아너스빌 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
+              <h3>경남아너스빌(1608-8) <span class='year-badge'>2006년</span> <span class="tag">전용면적 84㎡</span></h3>
+              <div class="card-sub">📍 서울특별시 서초구 서초동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
               <div class="grid">
                 <div class="k">이번 실거래</div>
-                <div><span class="highlight">650,000만원</span> (2026-03-07 | 10층)</div>
+                <div><span class="highlight">192,000만원</span> (2026-02-20 | 8층)</div>
                 <div class="k">직전 최고가</div>
-                <div>630,000만원 (2025-07-14 | 28층)</div>
+                <div>151,000만원 (2021-08-19 | 4층)</div>
                 <div class="k">변화</div>
-                <div class="rise">20,000만원 상승 (3.2%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    <span class="badge-rank rank-84">강남구 84타입 NO.5 단지</span>
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 강남구"
-                     data-build-year="2018" data-young="1"
-                     data-very-young="0" data-old="0" data-area="123"
-                     data-kakao-query="강남구 삼성동 삼성동센트럴아이파크 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>삼성동센트럴아이파크 <span class='year-badge young'>2018년</span> <span class="tag">전용면적 123㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 강남구 삼성동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">478,000만원</span> (2026-02-20 | 6층)</div>
-                <div class="k">직전 최고가</div>
-                <div>342,000만원 (2019-09-18 | 20층)</div>
-                <div class="k">변화</div>
-                <div class="rise">136,000만원 상승 (39.8%)</div>
+                <div class="rise">41,000만원 상승 (27.2%)</div>
                 <div class="k">특이사항</div>
                 <div>
                     
@@ -514,965 +564,19 @@
             </section>
             
 
-            <section class="card" data-region="서울특별시 송파구"
+            <section class="card" data-region="서울특별시 서초구"
                      data-build-year="1988" data-young="0"
-                     data-very-young="0" data-old="1" data-area="121"
-                     data-kakao-query="송파구 방이동 올림픽선수기자촌1단지 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>올림픽선수기자촌1단지 <span class='year-badge old'>1988년</span> <span class="tag">전용면적 121㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 송파구 방이동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">385,000만원</span> (2026-02-23 | 6층)</div>
-                <div class="k">직전 최고가</div>
-                <div>305,000만원 (2025-05-29 | 4층)</div>
-                <div class="k">변화</div>
-                <div class="rise">80,000만원 상승 (26.2%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 서초구"
-                     data-build-year="2013" data-young="0"
-                     data-very-young="0" data-old="0" data-area="121"
-                     data-kakao-query="서초구 방배동 롯데캐슬아르떼 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>롯데캐슬아르떼 <span class='year-badge'>2013년</span> <span class="tag">전용면적 121㎡</span></h3>
+                     data-very-young="0" data-old="1" data-area="51"
+                     data-kakao-query="서초구 방배동 방배임광3차 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
+              <h3>방배임광3차 <span class='year-badge old'>1988년</span> <span class="tag">전용면적 51㎡</span></h3>
               <div class="card-sub">📍 서울특별시 서초구 방배동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
               <div class="grid">
                 <div class="k">이번 실거래</div>
-                <div><span class="highlight">344,000만원</span> (2026-02-28 | 10층)</div>
+                <div><span class="highlight">150,000만원</span> (2026-03-11 | 2층)</div>
                 <div class="k">직전 최고가</div>
-                <div>325,000만원 (2025-06-30 | 7층)</div>
+                <div>123,500만원 (2025-03-12 | 5층)</div>
                 <div class="k">변화</div>
-                <div class="rise">19,000만원 상승 (5.8%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 성남시"
-                     data-build-year="1992" data-young="0"
-                     data-very-young="0" data-old="1" data-area="193"
-                     data-kakao-query="성남시(경) 수내동 양지마을 금호 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>양지마을(금호1) <span class='year-badge old'>1992년</span> <span class="tag">전용면적 193㎡</span></h3>
-              <div class="card-sub">📍 경기도 성남시(경) 수내동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">307,500만원</span> (2026-02-21 | 15층)</div>
-                <div class="k">직전 최고가</div>
-                <div>240,000만원 (2024-09-01 | 15층)</div>
-                <div class="k">변화</div>
-                <div class="rise">67,500만원 상승 (28.1%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 서초구"
-                     data-build-year="1985" data-young="0"
-                     data-very-young="0" data-old="1" data-area="136"
-                     data-kakao-query="서초구 방배동 임광 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>임광 <span class='year-badge old'>1985년</span> <span class="tag">전용면적 136㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 서초구 방배동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">300,000만원</span> (2026-02-21 | 8층)</div>
-                <div class="k">직전 최고가</div>
-                <div>297,000만원 (2026-01-02 | 10층)</div>
-                <div class="k">변화</div>
-                <div class="rise">3,000만원 상승 (1.0%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 강남구"
-                     data-build-year="1987" data-young="0"
-                     data-very-young="0" data-old="1" data-area="79"
-                     data-kakao-query="강남구 개포동 우성8 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>우성8 <span class='year-badge old'>1987년</span> <span class="tag">전용면적 79㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 강남구 개포동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">272,000만원</span> (2026-02-23 | 5층)</div>
-                <div class="k">직전 최고가</div>
-                <div>270,000만원 (2025-09-14 | 3층)</div>
-                <div class="k">변화</div>
-                <div class="rise">2,000만원 상승 (0.7%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 송파구"
-                     data-build-year="2021" data-young="1"
-                     data-very-young="1" data-old="0" data-area="105"
-                     data-kakao-query="송파구 거여동 송파위례리슈빌 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>송파위례리슈빌 <span class='year-badge very-young'>2021년</span> <span class="tag">전용면적 105㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 송파구 거여동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">237,000만원</span> (2026-02-21 | 11층)</div>
-                <div class="k">직전 최고가</div>
-                <div>215,000만원 (2026-02-04 | 9층)</div>
-                <div class="k">변화</div>
-                <div class="rise">22,000만원 상승 (10.2%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 송파구"
-                     data-build-year="2016" data-young="1"
-                     data-very-young="0" data-old="0" data-area="90"
-                     data-kakao-query="송파구 장지동 위례2차아이파크 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>위례2차아이파크 <span class='year-badge young'>2016년</span> <span class="tag">전용면적 90㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 송파구 장지동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">235,000만원</span> (2026-02-24 | 11층)</div>
-                <div class="k">직전 최고가</div>
-                <div>194,500만원 (2025-10-31 | 17층)</div>
-                <div class="k">변화</div>
-                <div class="rise">40,500만원 상승 (20.8%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 서초구"
-                     data-build-year="2004" data-young="0"
-                     data-very-young="0" data-old="0" data-area="136"
-                     data-kakao-query="서초구 방배동 상지리츠빌4차 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>상지리츠빌4차(843-13) <span class='year-badge'>2004년</span> <span class="tag">전용면적 136㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 서초구 방배동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">225,000만원</span> (2026-02-10 | 1층)</div>
-                <div class="k">직전 최고가</div>
-                <div>209,000만원 (2025-10-23 | 3층)</div>
-                <div class="k">변화</div>
-                <div class="rise">16,000만원 상승 (7.7%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 마포구"
-                     data-build-year="2014" data-young="0"
-                     data-very-young="0" data-old="0" data-area="84"
-                     data-kakao-query="마포구 상수동 래미안밤섬리베뉴Ⅰ 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>래미안밤섬리베뉴Ⅰ <span class='year-badge'>2014년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 마포구 상수동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">220,000만원</span> (2026-02-22 | 12층)</div>
-                <div class="k">직전 최고가</div>
-                <div>215,000만원 (2025-08-23 | 16층)</div>
-                <div class="k">변화</div>
-                <div class="rise">5,000만원 상승 (2.3%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 성남시"
-                     data-build-year="2003" data-young="0"
-                     data-very-young="0" data-old="0" data-area="151"
-                     data-kakao-query="성남시(경) 정자동 미켈란쉐르빌 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>미켈란쉐르빌 <span class='year-badge'>2003년</span> <span class="tag">전용면적 151㎡</span></h3>
-              <div class="card-sub">📍 경기도 성남시(경) 정자동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">218,500만원</span> (2026-02-20 | 8층)</div>
-                <div class="k">직전 최고가</div>
-                <div>215,000만원 (2025-12-29 | 20층)</div>
-                <div class="k">변화</div>
-                <div class="rise">3,500만원 상승 (1.6%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 송파구"
-                     data-build-year="1997" data-young="0"
-                     data-very-young="0" data-old="1" data-area="59"
-                     data-kakao-query="송파구 가락동 가락 차 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>가락(1차)쌍용아파트 <span class='year-badge old'>1997년</span> <span class="tag">전용면적 59㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 송파구 가락동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">197,000만원</span> (2026-02-14 | 19층)</div>
-                <div class="k">직전 최고가</div>
-                <div>196,000만원 (2025-12-26 | 10층)</div>
-                <div class="k">변화</div>
-                <div class="rise">1,000만원 상승 (0.5%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 동대문구"
-                     data-build-year="2014" data-young="0"
-                     data-very-young="0" data-old="0" data-area="121"
-                     data-kakao-query="동대문구 전농동 래미안크레시티 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>래미안크레시티 <span class='year-badge'>2014년</span> <span class="tag">전용면적 121㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 동대문구 전농동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">188,000만원</span> (2026-02-28 | 8층)</div>
-                <div class="k">직전 최고가</div>
-                <div>187,000만원 (2025-12-03 | 7층)</div>
-                <div class="k">변화</div>
-                <div class="rise">1,000만원 상승 (0.5%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    <span class="badge-rank rank-84">동대문구 84타입 NO.4 단지</span>
-                    <span class="badge-rank rank-59">동대문구 59타입 NO.3 단지</span>
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 성남시"
-                     data-build-year="1992" data-young="0"
-                     data-very-young="0" data-old="1" data-area="84"
-                     data-kakao-query="성남시(경) 이매동 이매촌 금강 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>이매촌(금강) <span class='year-badge old'>1992년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 경기도 성남시(경) 이매동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">185,000만원</span> (2026-02-24 | 5층)</div>
-                <div class="k">직전 최고가</div>
-                <div>180,000만원 (2025-11-28 | 6층)</div>
-                <div class="k">변화</div>
-                <div class="rise">5,000만원 상승 (2.8%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 노원구"
-                     data-build-year="2026" data-young="1"
-                     data-very-young="1" data-old="0" data-area="105"
-                     data-kakao-query="노원구 월계동 서울원 아이파크 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>서울원 아이파크 <span class='year-badge new'>분양</span> <span class="tag">전용면적 105㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 노원구 월계동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">182,030만원</span> (2026-03-13 | 26층)</div>
-                <div class="k">직전 최고가</div>
-                <div>163,941만원 (2026-02-23 | 31층)</div>
-                <div class="k">변화</div>
-                <div class="rise">18,089만원 상승 (11.0%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    <span class="badge-rank rank-84">노원구 84타입 NO.1 단지</span>
-                    <span class="badge-rank rank-59">노원구 59타입 NO.3 단지</span>
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 성남시"
-                     data-build-year="1992" data-young="0"
-                     data-very-young="0" data-old="1" data-area="94"
-                     data-kakao-query="성남시(경) 서현동 효자촌 삼환 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>효자촌(삼환) <span class='year-badge old'>1992년</span> <span class="tag">전용면적 94㎡</span></h3>
-              <div class="card-sub">📍 경기도 성남시(경) 서현동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">179,000만원</span> (2026-02-13 | 3층)</div>
-                <div class="k">직전 최고가</div>
-                <div>170,000만원 (2025-09-23 | 18층)</div>
-                <div class="k">변화</div>
-                <div class="rise">9,000만원 상승 (5.3%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 중구"
-                     data-build-year="2002" data-young="0"
-                     data-very-young="0" data-old="0" data-area="84"
-                     data-kakao-query="중구(서) 신당동 남산타운 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>남산타운 <span class='year-badge'>2002년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 중구(서) 신당동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">171,000만원</span> (2026-03-10 | 10층)</div>
-                <div class="k">직전 최고가</div>
-                <div>170,000만원 (2025-10-15 | 5층)</div>
-                <div class="k">변화</div>
-                <div class="rise">1,000만원 상승 (0.6%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 송파구"
-                     data-build-year="2008" data-young="0"
-                     data-very-young="0" data-old="0" data-area="59"
-                     data-kakao-query="송파구 장지동 송파파인타운8단지 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>송파파인타운8단지 <span class='year-badge'>2008년</span> <span class="tag">전용면적 59㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 송파구 장지동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">170,000만원</span> (2026-02-14 | 12층)</div>
-                <div class="k">직전 최고가</div>
-                <div>169,500만원 (2026-02-05 | 17층)</div>
-                <div class="k">변화</div>
-                <div class="rise">500만원 상승 (0.3%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 고양시"
-                     data-build-year="2019" data-young="1"
-                     data-very-young="0" data-old="0" data-area="104"
-                     data-kakao-query="고양시(경) 장항동 킨텍스원시티2블럭 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>킨텍스원시티2블럭 <span class='year-badge young'>2019년</span> <span class="tag">전용면적 104㎡</span></h3>
-              <div class="card-sub">📍 경기도 고양시(경) 장항동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">170,000만원</span> (2026-03-12 | 46층)</div>
-                <div class="k">직전 최고가</div>
-                <div>150,000만원 (2020-10-06 | 46층)</div>
-                <div class="k">변화</div>
-                <div class="rise">20,000만원 상승 (13.3%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    <span class="badge-rank rank-84">고양시 84타입 NO.3 단지</span>
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 의왕시"
-                     data-build-year="2019" data-young="1"
-                     data-very-young="0" data-old="0" data-area="99"
-                     data-kakao-query="의왕시 포일동 인덕원푸르지오엘센트로 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>인덕원푸르지오엘센트로 <span class='year-badge young'>2019년</span> <span class="tag">전용면적 99㎡</span></h3>
-              <div class="card-sub">📍 경기도 의왕시 포일동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">165,300만원</span> (2026-03-03 | 11층)</div>
-                <div class="k">직전 최고가</div>
-                <div>160,000만원 (2026-01-26 | 32층)</div>
-                <div class="k">변화</div>
-                <div class="rise">5,300만원 상승 (3.3%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    <span class="badge-rank rank-84">의왕시 84타입 NO.1 단지</span>
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 강서구"
-                     data-build-year="2013" data-young="0"
-                     data-very-young="0" data-old="0" data-area="84"
-                     data-kakao-query="강서구(서) 가양동 강서한강자이 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>강서한강자이 <span class='year-badge'>2013년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 강서구(서) 가양동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">160,000만원</span> (2026-02-12 | 20층)</div>
-                <div class="k">직전 최고가</div>
-                <div>157,000만원 (2026-01-28 | 21층)</div>
-                <div class="k">변화</div>
-                <div class="rise">3,000만원 상승 (1.9%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 하남시"
-                     data-build-year="2021" data-young="1"
-                     data-very-young="1" data-old="0" data-area="102"
-                     data-kakao-query="하남시 망월동 미사역파라곤 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>미사역파라곤 <span class='year-badge very-young'>2021년</span> <span class="tag">전용면적 102㎡</span></h3>
-              <div class="card-sub">📍 경기도 하남시 망월동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">160,000만원</span> (2026-03-09 | 28층)</div>
-                <div class="k">직전 최고가</div>
-                <div>152,000만원 (2025-05-06 | 23층)</div>
-                <div class="k">변화</div>
-                <div class="rise">8,000만원 상승 (5.3%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 안양시"
-                     data-build-year="1994" data-young="0"
-                     data-very-young="0" data-old="1" data-area="133"
-                     data-kakao-query="안양시(경) 평촌동 꿈마을건영3차 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>꿈마을건영3차 <span class='year-badge old'>1994년</span> <span class="tag">전용면적 133㎡</span></h3>
-              <div class="card-sub">📍 경기도 안양시(경) 평촌동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">160,000만원</span> (2026-03-13 | 12층)</div>
-                <div class="k">직전 최고가</div>
-                <div>157,000만원 (2026-03-10 | 10층)</div>
-                <div class="k">변화</div>
-                <div class="rise">3,000만원 상승 (1.9%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 서초구"
-                     data-build-year="1994" data-young="0"
-                     data-very-young="0" data-old="1" data-area="59"
-                     data-kakao-query="서초구 우면동 한라 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>한라 <span class='year-badge old'>1994년</span> <span class="tag">전용면적 59㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 서초구 우면동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">159,500만원</span> (2026-02-06 | 5층)</div>
-                <div class="k">직전 최고가</div>
-                <div>157,000만원 (2026-01-20 | 4층)</div>
-                <div class="k">변화</div>
-                <div class="rise">2,500만원 상승 (1.6%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 강서구"
-                     data-build-year="2016" data-young="1"
-                     data-very-young="0" data-old="0" data-area="84"
-                     data-kakao-query="강서구(서) 마곡동 마곡엠밸리8단지 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>마곡엠밸리8단지 <span class='year-badge young'>2016년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 강서구(서) 마곡동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">158,000만원</span> (2026-03-05 | 3층)</div>
-                <div class="k">직전 최고가</div>
-                <div>156,000만원 (2026-02-07 | 1층)</div>
-                <div class="k">변화</div>
-                <div class="rise">2,000만원 상승 (1.3%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 성남시"
-                     data-build-year="1992" data-young="0"
-                     data-very-young="0" data-old="1" data-area="48"
-                     data-kakao-query="성남시(경) 수내동 양지마을 단지 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>양지마을(5단지)(한양501-514) <span class='year-badge old'>1992년</span> <span class="tag">전용면적 48㎡</span></h3>
-              <div class="card-sub">📍 경기도 성남시(경) 수내동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">156,100만원</span> (2026-02-13 | 3층)</div>
-                <div class="k">직전 최고가</div>
-                <div>154,000만원 (2026-01-22 | 3층)</div>
-                <div class="k">변화</div>
-                <div class="rise">2,100만원 상승 (1.4%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 강동구"
-                     data-build-year="2011" data-young="0"
-                     data-very-young="0" data-old="0" data-area="114"
-                     data-kakao-query="강동구 강일동 고덕리엔파크1단지 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>고덕리엔파크1단지 <span class='year-badge'>2011년</span> <span class="tag">전용면적 114㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 강동구 강일동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">155,000만원</span> (2026-02-14 | 13층)</div>
-                <div class="k">직전 최고가</div>
-                <div>153,000만원 (2021-09-17 | 5층)</div>
-                <div class="k">변화</div>
-                <div class="rise">2,000만원 상승 (1.3%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 동대문구"
-                     data-build-year="2018" data-young="1"
-                     data-very-young="0" data-old="0" data-area="59"
-                     data-kakao-query="동대문구 답십리동 힐스테이트청계 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>힐스테이트청계 <span class='year-badge young'>2018년</span> <span class="tag">전용면적 59㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 동대문구 답십리동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">154,000만원</span> (2026-02-20 | 5층)</div>
-                <div class="k">직전 최고가</div>
-                <div>145,000만원 (2026-02-27 | 16층)</div>
-                <div class="k">변화</div>
-                <div class="rise">9,000만원 상승 (6.2%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    <span class="badge-rank rank-59">동대문구 59타입 NO.5 단지</span>
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 강동구"
-                     data-build-year="2002" data-young="0"
-                     data-very-young="0" data-old="0" data-area="59"
-                     data-kakao-query="강동구 암사동 삼성광나루 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>삼성광나루 <span class='year-badge'>2002년</span> <span class="tag">전용면적 59㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 강동구 암사동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">150,000만원</span> (2026-03-06 | 4층)</div>
-                <div class="k">직전 최고가</div>
-                <div>128,000만원 (2026-01-29 | 21층)</div>
-                <div class="k">변화</div>
-                <div class="rise">22,000만원 상승 (17.2%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 성남시"
-                     data-build-year="2020" data-young="1"
-                     data-very-young="0" data-old="0" data-area="74"
-                     data-kakao-query="성남시(경) 신흥동 산성역포레스티아 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>산성역포레스티아 <span class='year-badge young'>2020년</span> <span class="tag">전용면적 74㎡</span></h3>
-              <div class="card-sub">📍 경기도 성남시(경) 신흥동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">149,000만원</span> (2026-02-24 | 23층)</div>
-                <div class="k">직전 최고가</div>
-                <div>148,000만원 (2026-02-13 | 24층)</div>
-                <div class="k">변화</div>
-                <div class="rise">1,000만원 상승 (0.7%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 성남시"
-                     data-build-year="2021" data-young="1"
-                     data-very-young="1" data-old="0" data-area="84"
-                     data-kakao-query="성남시(경) 대장동 판교풍경채어바니티 단지 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>판교풍경채어바니티(5단지) <span class='year-badge very-young'>2021년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 경기도 성남시(경) 대장동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">145,000만원</span> (2026-02-24 | 17층)</div>
-                <div class="k">직전 최고가</div>
-                <div>140,000만원 (2026-01-30 | 19층)</div>
-                <div class="k">변화</div>
-                <div class="rise">5,000만원 상승 (3.6%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 송파구"
-                     data-build-year="2000" data-young="0"
-                     data-very-young="0" data-old="0" data-area="84"
-                     data-kakao-query="송파구 풍납동 신성노바빌아파트 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>신성노바빌아파트 <span class='year-badge'>2000년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 송파구 풍납동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">145,000만원</span> (2026-01-24 | 17층)</div>
-                <div class="k">직전 최고가</div>
-                <div>134,700만원 (2021-09-25 | 17층)</div>
-                <div class="k">변화</div>
-                <div class="rise">10,300만원 상승 (7.6%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 송파구"
-                     data-build-year="1998" data-young="0"
-                     data-very-young="0" data-old="1" data-area="80"
-                     data-kakao-query="송파구 풍납동 씨티극동1 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>씨티극동1 <span class='year-badge old'>1998년</span> <span class="tag">전용면적 80㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 송파구 풍납동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">145,000만원</span> (2026-02-20 | 16층)</div>
-                <div class="k">직전 최고가</div>
-                <div>123,000만원 (2025-10-29 | 12층)</div>
-                <div class="k">변화</div>
-                <div class="rise">22,000만원 상승 (17.9%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 강서구"
-                     data-build-year="2007" data-young="0"
-                     data-very-young="0" data-old="0" data-area="84"
-                     data-kakao-query="강서구(서) 내발산동 마곡수명산파크2단지 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>마곡수명산파크2단지 <span class='year-badge'>2007년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 강서구(서) 내발산동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">137,500만원</span> (2026-02-20 | 12층)</div>
-                <div class="k">직전 최고가</div>
-                <div>128,000만원 (2021-08-06 | 8층)</div>
-                <div class="k">변화</div>
-                <div class="rise">9,500만원 상승 (7.4%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 동대문구"
-                     data-build-year="2007" data-young="0"
-                     data-very-young="0" data-old="0" data-area="114"
-                     data-kakao-query="동대문구 장안동 장안힐스테이트 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>장안힐스테이트 <span class='year-badge'>2007년</span> <span class="tag">전용면적 114㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 동대문구 장안동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">137,500만원</span> (2026-03-10 | 14층)</div>
-                <div class="k">직전 최고가</div>
-                <div>130,000만원 (2024-06-10 | 25층)</div>
-                <div class="k">변화</div>
-                <div class="rise">7,500만원 상승 (5.8%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 서대문구"
-                     data-build-year="1995" data-young="0"
-                     data-very-young="0" data-old="1" data-area="84"
-                     data-kakao-query="서대문구 영천동 독립문삼호 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>독립문삼호 <span class='year-badge old'>1995년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 서대문구 영천동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">136,500만원</span> (2026-02-20 | 15층)</div>
-                <div class="k">직전 최고가</div>
-                <div>126,700만원 (2025-12-26 | 18층)</div>
-                <div class="k">변화</div>
-                <div class="rise">9,800만원 상승 (7.7%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 의왕시"
-                     data-build-year="2026" data-young="1"
-                     data-very-young="1" data-old="0" data-area="84"
-                     data-kakao-query="의왕시 내손동 인덕원 퍼스비엘 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>인덕원 퍼스비엘 <span class='year-badge new'>분양</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 경기도 의왕시 내손동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">135,000만원</span> (2026-02-28 | 16층)</div>
-                <div class="k">직전 최고가</div>
-                <div>130,000만원 (2026-01-31 | 13층)</div>
-                <div class="k">변화</div>
-                <div class="rise">5,000만원 상승 (3.8%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    <span class="badge-rank rank-84">의왕시 84타입 NO.4 단지</span>
-                    <span class="badge-rank rank-59">의왕시 59타입 NO.1 단지</span>
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 동대문구"
-                     data-build-year="2003" data-young="0"
-                     data-very-young="0" data-old="0" data-area="115"
-                     data-kakao-query="동대문구 장안동 래미안장안 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>래미안장안 <span class='year-badge'>2003년</span> <span class="tag">전용면적 115㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 동대문구 장안동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">134,000만원</span> (2026-02-28 | 17층)</div>
-                <div class="k">직전 최고가</div>
-                <div>129,000만원 (2026-01-10 | 7층)</div>
-                <div class="k">변화</div>
-                <div class="rise">5,000만원 상승 (3.9%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 동작구"
-                     data-build-year="2003" data-young="0"
-                     data-very-young="0" data-old="0" data-area="84"
-                     data-kakao-query="동작구 상도동 쌍용스윗닷홈 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>쌍용스윗닷홈 <span class='year-badge'>2003년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 동작구 상도동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">133,000만원</span> (2026-02-23 | 8층)</div>
-                <div class="k">직전 최고가</div>
-                <div>130,000만원 (2026-01-20 | 12층)</div>
-                <div class="k">변화</div>
-                <div class="rise">3,000만원 상승 (2.3%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 성남시"
-                     data-build-year="2021" data-young="1"
-                     data-very-young="1" data-old="0" data-area="84"
-                     data-kakao-query="성남시(경) 대장동 판교풍경채어바니티 단지 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>판교풍경채어바니티(7단지) <span class='year-badge very-young'>2021년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 경기도 성남시(경) 대장동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">132,000만원</span> (2026-02-25 | 15층)</div>
-                <div class="k">직전 최고가</div>
-                <div>128,000만원 (2026-02-19 | 5층)</div>
-                <div class="k">변화</div>
-                <div class="rise">4,000만원 상승 (3.1%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 하남시"
-                     data-build-year="2015" data-young="0"
-                     data-very-young="0" data-old="0" data-area="84"
-                     data-kakao-query="하남시 망월동 미사강변루나리움 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>미사강변루나리움 <span class='year-badge'>2015년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 경기도 하남시 망월동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">128,500만원</span> (2026-03-01 | 24층)</div>
-                <div class="k">직전 최고가</div>
-                <div>120,000만원 (2026-01-07 | 11층)</div>
-                <div class="k">변화</div>
-                <div class="rise">8,500만원 상승 (7.1%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    <span class="badge-rank rank-59">하남시 59타입 NO.4 단지</span>
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 송파구"
-                     data-build-year="1993" data-young="0"
-                     data-very-young="0" data-old="1" data-area="84"
-                     data-kakao-query="송파구 거여동 현대3차 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>현대3차 <span class='year-badge old'>1993년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 송파구 거여동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">127,500만원</span> (2026-02-12 | 10층)</div>
-                <div class="k">직전 최고가</div>
-                <div>124,800만원 (2026-01-24 | 12층)</div>
-                <div class="k">변화</div>
-                <div class="rise">2,700만원 상승 (2.2%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 영등포구"
-                     data-build-year="1997" data-young="0"
-                     data-very-young="0" data-old="1" data-area="84"
-                     data-kakao-query="영등포구 신길동 삼환 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>삼환 <span class='year-badge old'>1997년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 영등포구 신길동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">126,600만원</span> (2026-03-08 | 13층)</div>
-                <div class="k">직전 최고가</div>
-                <div>125,300만원 (2026-01-08 | 22층)</div>
-                <div class="k">변화</div>
-                <div class="rise">1,300만원 상승 (1.0%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 마포구"
-                     data-build-year="2003" data-young="0"
-                     data-very-young="0" data-old="0" data-area="59"
-                     data-kakao-query="마포구 상암동 상암월드컵파크2단지 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>상암월드컵파크2단지 <span class='year-badge'>2003년</span> <span class="tag">전용면적 59㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 마포구 상암동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">125,000만원</span> (2026-02-27 | 10층)</div>
-                <div class="k">직전 최고가</div>
-                <div>123,500만원 (2026-01-24 | 8층)</div>
-                <div class="k">변화</div>
-                <div class="rise">1,500만원 상승 (1.2%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 용산구"
-                     data-build-year="2014" data-young="0"
-                     data-very-young="0" data-old="0" data-area="46"
-                     data-kakao-query="용산구 원효로1가 용산더프라임 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>용산더프라임 <span class='year-badge'>2014년</span> <span class="tag">전용면적 46㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 용산구 원효로1가 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">124,000만원</span> (2026-02-21 | 3층)</div>
-                <div class="k">직전 최고가</div>
-                <div>102,000만원 (2024-08-24 | 5층)</div>
-                <div class="k">변화</div>
-                <div class="rise">22,000만원 상승 (21.6%)</div>
+                <div class="rise">26,500만원 상승 (21.5%)</div>
                 <div class="k">특이사항</div>
                 <div>
                     
@@ -1484,303 +588,17 @@
 
             <section class="card" data-region="경기도 성남시"
                      data-build-year="2023" data-young="1"
-                     data-very-young="1" data-old="0" data-area="59"
-                     data-kakao-query="성남시(경) 금광동 e편한세상금빛그랑메종1단지 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>e편한세상금빛그랑메종1단지 <span class='year-badge very-young'>2023년</span> <span class="tag">전용면적 59㎡</span></h3>
+                     data-very-young="1" data-old="0" data-area="74"
+                     data-kakao-query="성남시(경) 금광동 e편한세상금빛그랑메종5단지 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
+              <h3>e편한세상금빛그랑메종5단지 <span class='year-badge very-young'>2023년</span> <span class="tag">전용면적 74㎡</span></h3>
               <div class="card-sub">📍 경기도 성남시(경) 금광동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
               <div class="grid">
                 <div class="k">이번 실거래</div>
-                <div><span class="highlight">123,000만원</span> (2026-02-26 | 17층)</div>
+                <div><span class="highlight">111,800만원</span> (2026-02-28 | 15층)</div>
                 <div class="k">직전 최고가</div>
-                <div>114,800만원 (2026-01-03 | 4층)</div>
+                <div>106,000만원 (2026-01-24 | 25층)</div>
                 <div class="k">변화</div>
-                <div class="rise">8,200만원 상승 (7.1%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 용인시"
-                     data-build-year="2000" data-young="0"
-                     data-very-young="0" data-old="0" data-area="59"
-                     data-kakao-query="용인시(경) 풍덕천동 신정마을주공1 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>신정마을주공1 <span class='year-badge'>2000년</span> <span class="tag">전용면적 59㎡</span></h3>
-              <div class="card-sub">📍 경기도 용인시(경) 풍덕천동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">120,000만원</span> (2026-02-27 | 3층)</div>
-                <div class="k">직전 최고가</div>
-                <div>118,000만원 (2026-02-21 | 9층)</div>
-                <div class="k">변화</div>
-                <div class="rise">2,000만원 상승 (1.7%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    <span class="badge-rank rank-59">용인시 59타입 NO.2 단지</span>
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 영등포구"
-                     data-build-year="1998" data-young="0"
-                     data-very-young="0" data-old="1" data-area="84"
-                     data-kakao-query="영등포구 양평동5가 동보 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>동보 <span class='year-badge old'>1998년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 영등포구 양평동5가 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">119,500만원</span> (2026-02-22 | 18층)</div>
-                <div class="k">직전 최고가</div>
-                <div>119,000만원 (2025-12-24 | 13층)</div>
-                <div class="k">변화</div>
-                <div class="rise">500만원 상승 (0.4%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 강서구"
-                     data-build-year="1994" data-young="0"
-                     data-very-young="0" data-old="1" data-area="84"
-                     data-kakao-query="강서구(서) 염창동 현대1 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>현대1 <span class='year-badge old'>1994년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 강서구(서) 염창동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">119,000만원</span> (2026-03-04 | 9층)</div>
-                <div class="k">직전 최고가</div>
-                <div>113,000만원 (2026-02-12 | 12층)</div>
-                <div class="k">변화</div>
-                <div class="rise">6,000만원 상승 (5.3%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 송파구"
-                     data-build-year="1995" data-young="0"
-                     data-very-young="0" data-old="1" data-area="80"
-                     data-kakao-query="송파구 가락동 풍림1 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>풍림1 <span class='year-badge old'>1995년</span> <span class="tag">전용면적 80㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 송파구 가락동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">118,000만원</span> (2026-02-24 | 7층)</div>
-                <div class="k">직전 최고가</div>
-                <div>106,800만원 (2025-10-28 | 5층)</div>
-                <div class="k">변화</div>
-                <div class="rise">11,200만원 상승 (10.5%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 동작구"
-                     data-build-year="2003" data-young="0"
-                     data-very-young="0" data-old="0" data-area="55"
-                     data-kakao-query="동작구 신대방동 롯데낙천대 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>롯데낙천대 <span class='year-badge'>2003년</span> <span class="tag">전용면적 55㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 동작구 신대방동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">117,000만원</span> (2026-03-04 | 13층)</div>
-                <div class="k">직전 최고가</div>
-                <div>112,000만원 (2026-02-05 | 18층)</div>
-                <div class="k">변화</div>
-                <div class="rise">5,000만원 상승 (4.5%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 영등포구"
-                     data-build-year="1991" data-young="0"
-                     data-very-young="0" data-old="1" data-area="84"
-                     data-kakao-query="영등포구 신길동 우성4 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>우성4 <span class='year-badge old'>1991년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 영등포구 신길동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">116,000만원</span> (2026-02-24 | 5층)</div>
-                <div class="k">직전 최고가</div>
-                <div>113,000만원 (2025-10-17 | 14층)</div>
-                <div class="k">변화</div>
-                <div class="rise">3,000만원 상승 (2.7%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 관악구"
-                     data-build-year="2026" data-young="1"
-                     data-very-young="1" data-old="0" data-area="84"
-                     data-kakao-query="관악구 신림동 서울대벤처타운역 푸르지오 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>서울대벤처타운역 푸르지오 <span class='year-badge new'>분양</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 관악구 신림동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">115,000만원</span> (2026-03-13 | 6층)</div>
-                <div class="k">직전 최고가</div>
-                <div>109,427만원 (2024-08-03 | 7층)</div>
-                <div class="k">변화</div>
-                <div class="rise">5,573만원 상승 (5.1%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 송파구"
-                     data-build-year="1989" data-young="0"
-                     data-very-young="0" data-old="1" data-area="46"
-                     data-kakao-query="송파구 문정동 문정시영 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>문정시영 <span class='year-badge old'>1989년</span> <span class="tag">전용면적 46㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 송파구 문정동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">114,500만원</span> (2026-03-07 | 2층)</div>
-                <div class="k">직전 최고가</div>
-                <div>110,000만원 (2026-01-24 | 5층)</div>
-                <div class="k">변화</div>
-                <div class="rise">4,500만원 상승 (4.1%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 안양시"
-                     data-build-year="2022" data-young="1"
-                     data-very-young="1" data-old="0" data-area="68"
-                     data-kakao-query="안양시(경) 비산동 평촌래미안푸르지오 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>평촌래미안푸르지오 <span class='year-badge very-young'>2022년</span> <span class="tag">전용면적 68㎡</span></h3>
-              <div class="card-sub">📍 경기도 안양시(경) 비산동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">112,000만원</span> (2026-03-05 | 22층)</div>
-                <div class="k">직전 최고가</div>
-                <div>94,500만원 (2024-09-05 | 16층)</div>
-                <div class="k">변화</div>
-                <div class="rise">17,500만원 상승 (18.5%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 구리시"
-                     data-build-year="1994" data-young="0"
-                     data-very-young="0" data-old="1" data-area="134"
-                     data-kakao-query="구리시 교문동 교문 동양고속 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>교문(동양고속) <span class='year-badge old'>1994년</span> <span class="tag">전용면적 134㎡</span></h3>
-              <div class="card-sub">📍 경기도 구리시 교문동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">111,000만원</span> (2026-03-02 | 15층)</div>
-                <div class="k">직전 최고가</div>
-                <div>100,000만원 (2021-05-18 | 13층)</div>
-                <div class="k">변화</div>
-                <div class="rise">11,000만원 상승 (11.0%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 용인시"
-                     data-build-year="2006" data-young="0"
-                     data-very-young="0" data-old="0" data-area="101"
-                     data-kakao-query="용인시(경) 상현동 상현마을수지센트럴아이파크 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>상현마을수지센트럴아이파크 <span class='year-badge'>2006년</span> <span class="tag">전용면적 101㎡</span></h3>
-              <div class="card-sub">📍 경기도 용인시(경) 상현동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">110,000만원</span> (2026-03-12 | 15층)</div>
-                <div class="k">직전 최고가</div>
-                <div>105,800만원 (2026-02-04 | 9층)</div>
-                <div class="k">변화</div>
-                <div class="rise">4,200만원 상승 (4.0%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 강서구"
-                     data-build-year="2004" data-young="0"
-                     data-very-young="0" data-old="0" data-area="84"
-                     data-kakao-query="강서구(서) 염창동 일신건영휴먼빌 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>일신건영휴먼빌 <span class='year-badge'>2004년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 강서구(서) 염창동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">110,000만원</span> (2026-03-06 | 6층)</div>
-                <div class="k">직전 최고가</div>
-                <div>109,000만원 (2026-02-10 | 10층)</div>
-                <div class="k">변화</div>
-                <div class="rise">1,000만원 상승 (0.9%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 영등포구"
-                     data-build-year="1983" data-young="0"
-                     data-very-young="0" data-old="1" data-area="58"
-                     data-kakao-query="영등포구 문래동2가 남성 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>남성 <span class='year-badge old'>1983년</span> <span class="tag">전용면적 58㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 영등포구 문래동2가 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">109,000만원</span> (2026-02-14 | 10층)</div>
-                <div class="k">직전 최고가</div>
-                <div>104,700만원 (2026-02-24 | 7층)</div>
-                <div class="k">변화</div>
-                <div class="rise">4,300만원 상승 (4.1%)</div>
+                <div class="rise">5,800만원 상승 (5.5%)</div>
                 <div class="k">특이사항</div>
                 <div>
                     
@@ -1791,612 +609,18 @@
             
 
             <section class="card" data-region="경기도 성남시"
-                     data-build-year="2013" data-young="0"
-                     data-very-young="0" data-old="0" data-area="100"
-                     data-kakao-query="성남시(경) 도촌동 東분당파크뷰 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>東분당파크뷰 <span class='year-badge'>2013년</span> <span class="tag">전용면적 100㎡</span></h3>
-              <div class="card-sub">📍 경기도 성남시(경) 도촌동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
+                     data-build-year="2003" data-young="0"
+                     data-very-young="0" data-old="0" data-area="49"
+                     data-kakao-query="성남시(경) 성남동 양지참빛 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
+              <h3>양지참빛 <span class='year-badge'>2003년</span> <span class="tag">전용면적 49㎡</span></h3>
+              <div class="card-sub">📍 경기도 성남시(경) 성남동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
               <div class="grid">
                 <div class="k">이번 실거래</div>
-                <div><span class="highlight">103,000만원</span> (2026-02-28 | 9층)</div>
+                <div><span class="highlight">41,000만원</span> (2026-02-09 | 11층)</div>
                 <div class="k">직전 최고가</div>
-                <div>95,000만원 (2026-02-08 | 9층)</div>
+                <div>39,000만원 (2025-05-10 | 12층)</div>
                 <div class="k">변화</div>
-                <div class="rise">8,000만원 상승 (8.4%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 하남시"
-                     data-build-year="2021" data-young="1"
-                     data-very-young="1" data-old="0" data-area="59"
-                     data-kakao-query="하남시 신장동 하남호반써밋에듀파크 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>하남호반써밋에듀파크 <span class='year-badge very-young'>2021년</span> <span class="tag">전용면적 59㎡</span></h3>
-              <div class="card-sub">📍 경기도 하남시 신장동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">102,000만원</span> (2026-02-19 | 14층)</div>
-                <div class="k">직전 최고가</div>
-                <div>100,000만원 (2025-12-20 | 13층)</div>
-                <div class="k">변화</div>
-                <div class="rise">2,000만원 상승 (2.0%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 서대문구"
-                     data-build-year="1992" data-young="0"
-                     data-very-young="0" data-old="1" data-area="83"
-                     data-kakao-query="서대문구 홍제동 홍제현대 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>홍제현대 <span class='year-badge old'>1992년</span> <span class="tag">전용면적 83㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 서대문구 홍제동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">100,700만원</span> (2026-02-28 | 9층)</div>
-                <div class="k">직전 최고가</div>
-                <div>98,000만원 (2025-12-18 | 11층)</div>
-                <div class="k">변화</div>
-                <div class="rise">2,700만원 상승 (2.8%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 용인시"
-                     data-build-year="2018" data-young="1"
-                     data-very-young="0" data-old="0" data-area="92"
-                     data-kakao-query="용인시(경) 상현동 포레나 광교상현 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>포레나 광교상현 <span class='year-badge young'>2018년</span> <span class="tag">전용면적 92㎡</span></h3>
-              <div class="card-sub">📍 경기도 용인시(경) 상현동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">99,500만원</span> (2026-03-09 | 2층)</div>
-                <div class="k">직전 최고가</div>
-                <div>97,600만원 (2021-09-29 | 2층)</div>
-                <div class="k">변화</div>
-                <div class="rise">1,900만원 상승 (1.9%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 양천구"
-                     data-build-year="2009" data-young="0"
-                     data-very-young="0" data-old="0" data-area="127"
-                     data-kakao-query="양천구 신월동 수명산SKVIEW 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>수명산SKVIEW <span class='year-badge'>2009년</span> <span class="tag">전용면적 127㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 양천구 신월동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">96,000만원</span> (2026-02-28 | 4층)</div>
-                <div class="k">직전 최고가</div>
-                <div>95,000만원 (2024-04-13 | 5층)</div>
-                <div class="k">변화</div>
-                <div class="rise">1,000만원 상승 (1.1%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 노원구"
-                     data-build-year="1983" data-young="0"
-                     data-very-young="0" data-old="1" data-area="106"
-                     data-kakao-query="노원구 월계동 동신 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>동신 <span class='year-badge old'>1983년</span> <span class="tag">전용면적 106㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 노원구 월계동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">95,000만원</span> (2026-02-20 | 2층)</div>
-                <div class="k">직전 최고가</div>
-                <div>84,000만원 (2025-10-01 | 11층)</div>
-                <div class="k">변화</div>
-                <div class="rise">11,000만원 상승 (13.1%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 서대문구"
-                     data-build-year="2002" data-young="0"
-                     data-very-young="0" data-old="0" data-area="84"
-                     data-kakao-query="서대문구 홍제동 문화촌현대 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>문화촌현대 <span class='year-badge'>2002년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 서대문구 홍제동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">90,000만원</span> (2026-02-13 | 15층)</div>
-                <div class="k">직전 최고가</div>
-                <div>86,600만원 (2021-05-01 | 11층)</div>
-                <div class="k">변화</div>
-                <div class="rise">3,400만원 상승 (3.9%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 노원구"
-                     data-build-year="2000" data-young="0"
-                     data-very-young="0" data-old="0" data-area="59"
-                     data-kakao-query="노원구 월계동 현대 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>현대 <span class='year-badge'>2000년</span> <span class="tag">전용면적 59㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 노원구 월계동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">85,000만원</span> (2026-02-25 | 15층)</div>
-                <div class="k">직전 최고가</div>
-                <div>83,500만원 (2022-06-18 | 6층)</div>
-                <div class="k">변화</div>
-                <div class="rise">1,500만원 상승 (1.8%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 강서구"
-                     data-build-year="1992" data-young="0"
-                     data-very-young="0" data-old="1" data-area="39"
-                     data-kakao-query="강서구(서) 가양동 가양6단지 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>가양6단지 <span class='year-badge old'>1992년</span> <span class="tag">전용면적 39㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 강서구(서) 가양동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">84,500만원</span> (2026-03-06 | 8층)</div>
-                <div class="k">직전 최고가</div>
-                <div>83,500만원 (2026-02-13 | 15층)</div>
-                <div class="k">변화</div>
-                <div class="rise">1,000만원 상승 (1.2%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 용인시"
-                     data-build-year="2002" data-young="0"
-                     data-very-young="0" data-old="0" data-area="141"
-                     data-kakao-query="용인시(경) 신봉동 신봉마을엘지빌리지5차 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>신봉마을엘지빌리지5차(B) <span class='year-badge'>2002년</span> <span class="tag">전용면적 141㎡</span></h3>
-              <div class="card-sub">📍 경기도 용인시(경) 신봉동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">84,250만원</span> (2026-03-07 | 7층)</div>
-                <div class="k">직전 최고가</div>
-                <div>84,000만원 (2021-02-02 | 17층)</div>
-                <div class="k">변화</div>
-                <div class="rise">250만원 상승 (0.3%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 수원시"
-                     data-build-year="2022" data-young="1"
-                     data-very-young="1" data-old="0" data-area="84"
-                     data-kakao-query="수원시(경) 곡반정동 수원하늘채더퍼스트1단지 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>수원하늘채더퍼스트1단지 <span class='year-badge very-young'>2022년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 경기도 수원시(경) 곡반정동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">81,500만원</span> (2026-02-27 | 15층)</div>
-                <div class="k">직전 최고가</div>
-                <div>80,200만원 (2024-08-14 | 13층)</div>
-                <div class="k">변화</div>
-                <div class="rise">1,300만원 상승 (1.6%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 노원구"
-                     data-build-year="2002" data-young="0"
-                     data-very-young="0" data-old="0" data-area="84"
-                     data-kakao-query="노원구 공릉동 공릉2신도브래뉴아파트 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>공릉2신도브래뉴아파트 <span class='year-badge'>2002년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 노원구 공릉동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">80,000만원</span> (2026-03-07 | 6층)</div>
-                <div class="k">직전 최고가</div>
-                <div>77,800만원 (2021-06-06 | 4층)</div>
-                <div class="k">변화</div>
-                <div class="rise">2,200만원 상승 (2.8%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 안양시"
-                     data-build-year="1993" data-young="0"
-                     data-very-young="0" data-old="1" data-area="59"
-                     data-kakao-query="안양시(경) 평촌동 초원한양 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>초원한양 <span class='year-badge old'>1993년</span> <span class="tag">전용면적 59㎡</span></h3>
-              <div class="card-sub">📍 경기도 안양시(경) 평촌동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">79,500만원</span> (2026-03-05 | 12층)</div>
-                <div class="k">직전 최고가</div>
-                <div>78,000만원 (2021-08-28 | 9층)</div>
-                <div class="k">변화</div>
-                <div class="rise">1,500만원 상승 (1.9%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 노원구"
-                     data-build-year="2002" data-young="0"
-                     data-very-young="0" data-old="0" data-area="72"
-                     data-kakao-query="노원구 공릉동 신도1차아파트 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>신도1차아파트 <span class='year-badge'>2002년</span> <span class="tag">전용면적 72㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 노원구 공릉동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">79,300만원</span> (2026-02-27 | 7층)</div>
-                <div class="k">직전 최고가</div>
-                <div>74,450만원 (2025-10-14 | 10층)</div>
-                <div class="k">변화</div>
-                <div class="rise">4,850만원 상승 (6.5%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 도봉구"
-                     data-build-year="2001" data-young="0"
-                     data-very-young="0" data-old="0" data-area="59"
-                     data-kakao-query="도봉구 창동 창동2차현대 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>창동2차현대 <span class='year-badge'>2001년</span> <span class="tag">전용면적 59㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 도봉구 창동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">78,500만원</span> (2026-03-02 | 13층)</div>
-                <div class="k">직전 최고가</div>
-                <div>77,000만원 (2022-01-19 | 15층)</div>
-                <div class="k">변화</div>
-                <div class="rise">1,500만원 상승 (1.9%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 강동구"
-                     data-build-year="2025" data-young="1"
-                     data-very-young="1" data-old="0" data-area="54"
-                     data-kakao-query="강동구 명일동 시앤디아파트 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>시앤디아파트 <span class='year-badge very-young'>2025년</span> <span class="tag">전용면적 54㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 강동구 명일동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">77,500만원</span> (2026-03-03 | 6층)</div>
-                <div class="k">직전 최고가</div>
-                <div>77,000만원 (2025-12-19 | 5층)</div>
-                <div class="k">변화</div>
-                <div class="rise">500만원 상승 (0.6%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 은평구"
-                     data-build-year="2001" data-young="0"
-                     data-very-young="0" data-old="0" data-area="78"
-                     data-kakao-query="은평구 녹번동 해주드림빌 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>해주드림빌 <span class='year-badge'>2001년</span> <span class="tag">전용면적 78㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 은평구 녹번동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">75,000만원</span> (2026-03-02 | 12층)</div>
-                <div class="k">직전 최고가</div>
-                <div>74,000만원 (2022-03-31 | 14층)</div>
-                <div class="k">변화</div>
-                <div class="rise">1,000만원 상승 (1.4%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 강서구"
-                     data-build-year="2000" data-young="0"
-                     data-very-young="0" data-old="0" data-area="84"
-                     data-kakao-query="강서구(서) 공항동 해태 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>해태 <span class='year-badge'>2000년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 강서구(서) 공항동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">73,000만원</span> (2026-02-25 | 9층)</div>
-                <div class="k">직전 최고가</div>
-                <div>70,000만원 (2025-10-14 | 16층)</div>
-                <div class="k">변화</div>
-                <div class="rise">3,000만원 상승 (4.3%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 중랑구"
-                     data-build-year="2006" data-young="0"
-                     data-very-young="0" data-old="0" data-area="84"
-                     data-kakao-query="중랑구 중화동 미영리치타운103 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>미영리치타운103 <span class='year-badge'>2006년</span> <span class="tag">전용면적 84㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 중랑구 중화동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">72,000만원</span> (2026-02-10 | 9층)</div>
-                <div class="k">직전 최고가</div>
-                <div>66,500만원 (2025-09-19 | 9층)</div>
-                <div class="k">변화</div>
-                <div class="rise">5,500만원 상승 (8.3%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 송파구"
-                     data-build-year="2004" data-young="0"
-                     data-very-young="0" data-old="0" data-area="79"
-                     data-kakao-query="송파구 문정동 대림미소나눔 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>대림미소나눔 <span class='year-badge'>2004년</span> <span class="tag">전용면적 79㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 송파구 문정동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">71,000만원</span> (2026-03-12 | 4층)</div>
-                <div class="k">직전 최고가</div>
-                <div>67,500만원 (2026-02-25 | 2층)</div>
-                <div class="k">변화</div>
-                <div class="rise">3,500만원 상승 (5.2%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 송파구"
-                     data-build-year="2021" data-young="1"
-                     data-very-young="1" data-old="0" data-area="33"
-                     data-kakao-query="송파구 가락동 테라펠리체송파 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>테라펠리체송파 <span class='year-badge very-young'>2021년</span> <span class="tag">전용면적 33㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 송파구 가락동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">71,000만원</span> (2026-03-03 | 16층)</div>
-                <div class="k">직전 최고가</div>
-                <div>70,500만원 (2025-11-29 | 15층)</div>
-                <div class="k">변화</div>
-                <div class="rise">500만원 상승 (0.7%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 서초구"
-                     data-build-year="2001" data-young="0"
-                     data-very-young="0" data-old="0" data-area="35"
-                     data-kakao-query="서초구 잠원동 대우아이빌 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>대우아이빌 <span class='year-badge'>2001년</span> <span class="tag">전용면적 35㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 서초구 잠원동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">69,000만원</span> (2026-03-06 | 6층)</div>
-                <div class="k">직전 최고가</div>
-                <div>67,200만원 (2026-01-02 | 8층)</div>
-                <div class="k">변화</div>
-                <div class="rise">1,800만원 상승 (2.7%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 남양주시"
-                     data-build-year="2024" data-young="1"
-                     data-very-young="1" data-old="0" data-area="59"
-                     data-kakao-query="남양주시 다산동 다산유보라마크뷰 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>다산유보라마크뷰 <span class='year-badge very-young'>2024년</span> <span class="tag">전용면적 59㎡</span></h3>
-              <div class="card-sub">📍 경기도 남양주시 다산동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">66,500만원</span> (2026-02-25 | 23층)</div>
-                <div class="k">직전 최고가</div>
-                <div>61,200만원 (2024-09-27 | 25층)</div>
-                <div class="k">변화</div>
-                <div class="rise">5,300만원 상승 (8.7%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 구리시"
-                     data-build-year="2001" data-young="0"
-                     data-very-young="0" data-old="0" data-area="79"
-                     data-kakao-query="구리시 인창동 아름마을일신건영 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>아름마을일신건영 <span class='year-badge'>2001년</span> <span class="tag">전용면적 79㎡</span></h3>
-              <div class="card-sub">📍 경기도 구리시 인창동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">63,000만원</span> (2026-02-28 | 15층)</div>
-                <div class="k">직전 최고가</div>
-                <div>62,000만원 (2025-05-02 | 10층)</div>
-                <div class="k">변화</div>
-                <div class="rise">1,000만원 상승 (1.6%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="경기도 구리시"
-                     data-build-year="1988" data-young="0"
-                     data-very-young="0" data-old="1" data-area="46"
-                     data-kakao-query="구리시 수택동 범우 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>범우 <span class='year-badge old'>1988년</span> <span class="tag">전용면적 46㎡</span></h3>
-              <div class="card-sub">📍 경기도 구리시 수택동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">44,500만원</span> (2026-02-15 | 3층)</div>
-                <div class="k">직전 최고가</div>
-                <div>40,500만원 (2026-02-06 | 5층)</div>
-                <div class="k">변화</div>
-                <div class="rise">4,000만원 상승 (9.9%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 양천구"
-                     data-build-year="1996" data-young="0"
-                     data-very-young="0" data-old="1" data-area="68"
-                     data-kakao-query="양천구 목동 두란 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>두란 <span class='year-badge old'>1996년</span> <span class="tag">전용면적 68㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 양천구 목동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">44,300만원</span> (2026-03-12 | 4층)</div>
-                <div class="k">직전 최고가</div>
-                <div>28,800만원 (2019-11-06 | 4층)</div>
-                <div class="k">변화</div>
-                <div class="rise">15,500만원 상승 (53.8%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="인천광역시 부평구"
-                     data-build-year="1988" data-young="0"
-                     data-very-young="0" data-old="1" data-area="58"
-                     data-kakao-query="부평구 부개동 동아 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>동아 <span class='year-badge old'>1988년</span> <span class="tag">전용면적 58㎡</span></h3>
-              <div class="card-sub">📍 인천광역시 부평구 부개동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">34,300만원</span> (2026-03-07 | 5층)</div>
-                <div class="k">직전 최고가</div>
-                <div>27,400만원 (2020-04-30 | 1층)</div>
-                <div class="k">변화</div>
-                <div class="rise">6,900만원 상승 (25.2%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="서울특별시 강남구"
-                     data-build-year="2013" data-young="0"
-                     data-very-young="0" data-old="0" data-area="28"
-                     data-kakao-query="강남구 청담동 청담신원아침도시마인 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>청담신원아침도시마인 <span class='year-badge'>2013년</span> <span class="tag">전용면적 28㎡</span></h3>
-              <div class="card-sub">📍 서울특별시 강남구 청담동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">34,000만원</span> (2026-02-20 | 6층)</div>
-                <div class="k">직전 최고가</div>
-                <div>33,250만원 (2022-03-15 | 5층)</div>
-                <div class="k">변화</div>
-                <div class="rise">750만원 상승 (2.3%)</div>
+                <div class="rise">2,000만원 상승 (5.1%)</div>
                 <div class="k">특이사항</div>
                 <div>
                     
@@ -2433,6 +657,28 @@
                     비슷한 가격대(1~3천만원 차이)의 단지를 짝지어 보여드립니다.</p>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 트리맵 상승률 보기 모달 -->
+          <div id="treemapModal" class="treemap-modal">
+            <div class="treemap-modal-content">
+              <div class="treemap-modal-header">
+                <h2>🗺️ 상승률 TOP 20 트리맵</h2>
+                <span class="treemap-modal-close" onclick="closeTreemapModal()">&times;</span>
+              </div>
+              <div class="treemap-modal-body">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+                  <button id="tmBtnAll" class="tm-filter-btn tm-active" onclick="setTreemapFilter('all')">전체</button>
+                  <button id="tmBtn84"  class="tm-filter-btn" onclick="setTreemapFilter('84')">84㎡</button>
+                  <button id="tmBtn59"  class="tm-filter-btn" onclick="setTreemapFilter('59')">59㎡</button>
+                  <span id="treemapSubtitle" style="color:#9ca3af;font-size:12px;margin-left:4px;">
+                    직전 최고가 대비 상승률 상위 20개 단지 · 블록 크기 = 상승률 비례
+                  </span>
+                </div>
+                <div id="treemapContainer"></div>
+                <div class="treemap-tooltip" id="treemapTooltip"></div>
               </div>
             </div>
           </div>
@@ -3332,7 +1578,7 @@
         })();
 
         // 신고가 분위 그래프 관련 함수
-        const aptData = [{"name": "래미안대치팰리스", "price": 650000, "date": "2026-03-07", "old_price": 630000, "floor": "10", "area": "151", "sido": "서울특별시", "sigungu": "강남구", "location_dong": "대치동", "build_year": "2015"}, {"name": "삼성동센트럴아이파크", "price": 478000, "date": "2026-02-20", "old_price": 342000, "floor": "6", "area": "123", "sido": "서울특별시", "sigungu": "강남구", "location_dong": "삼성동", "build_year": "2018"}, {"name": "올림픽선수기자촌1단지", "price": 385000, "date": "2026-02-23", "old_price": 305000, "floor": "6", "area": "121", "sido": "서울특별시", "sigungu": "송파구", "location_dong": "방이동", "build_year": "1988"}, {"name": "롯데캐슬아르떼", "price": 344000, "date": "2026-02-28", "old_price": 325000, "floor": "10", "area": "121", "sido": "서울특별시", "sigungu": "서초구", "location_dong": "방배동", "build_year": "2013"}, {"name": "양지마을(금호1)", "price": 307500, "date": "2026-02-21", "old_price": 240000, "floor": "15", "area": "193", "sido": "경기도", "sigungu": "성남시(경)", "location_dong": "수내동", "build_year": "1992"}, {"name": "임광", "price": 300000, "date": "2026-02-21", "old_price": 297000, "floor": "8", "area": "136", "sido": "서울특별시", "sigungu": "서초구", "location_dong": "방배동", "build_year": "1985"}, {"name": "우성8", "price": 272000, "date": "2026-02-23", "old_price": 270000, "floor": "5", "area": "79", "sido": "서울특별시", "sigungu": "강남구", "location_dong": "개포동", "build_year": "1987"}, {"name": "송파위례리슈빌", "price": 237000, "date": "2026-02-21", "old_price": 215000, "floor": "11", "area": "105", "sido": "서울특별시", "sigungu": "송파구", "location_dong": "거여동", "build_year": "2021"}, {"name": "위례2차아이파크", "price": 235000, "date": "2026-02-24", "old_price": 194500, "floor": "11", "area": "90", "sido": "서울특별시", "sigungu": "송파구", "location_dong": "장지동", "build_year": "2016"}, {"name": "상지리츠빌4차(843-13)", "price": 225000, "date": "2026-02-10", "old_price": 209000, "floor": "1", "area": "136", "sido": "서울특별시", "sigungu": "서초구", "location_dong": "방배동", "build_year": "2004"}, {"name": "래미안밤섬리베뉴Ⅰ", "price": 220000, "date": "2026-02-22", "old_price": 215000, "floor": "12", "area": "84", "sido": "서울특별시", "sigungu": "마포구", "location_dong": "상수동", "build_year": "2014"}, {"name": "미켈란쉐르빌", "price": 218500, "date": "2026-02-20", "old_price": 215000, "floor": "8", "area": "151", "sido": "경기도", "sigungu": "성남시(경)", "location_dong": "정자동", "build_year": "2003"}, {"name": "가락(1차)쌍용아파트", "price": 197000, "date": "2026-02-14", "old_price": 196000, "floor": "19", "area": "59", "sido": "서울특별시", "sigungu": "송파구", "location_dong": "가락동", "build_year": "1997"}, {"name": "래미안크레시티", "price": 188000, "date": "2026-02-28", "old_price": 187000, "floor": "8", "area": "121", "sido": "서울특별시", "sigungu": "동대문구", "location_dong": "전농동", "build_year": "2014"}, {"name": "이매촌(금강)", "price": 185000, "date": "2026-02-24", "old_price": 180000, "floor": "5", "area": "84", "sido": "경기도", "sigungu": "성남시(경)", "location_dong": "이매동", "build_year": "1992"}, {"name": "서울원 아이파크", "price": 182030, "date": "2026-03-13", "old_price": 163941, "floor": "26", "area": "105", "sido": "서울특별시", "sigungu": "노원구", "location_dong": "월계동", "build_year": "분양"}, {"name": "효자촌(삼환)", "price": 179000, "date": "2026-02-13", "old_price": 170000, "floor": "3", "area": "94", "sido": "경기도", "sigungu": "성남시(경)", "location_dong": "서현동", "build_year": "1992"}, {"name": "남산타운", "price": 171000, "date": "2026-03-10", "old_price": 170000, "floor": "10", "area": "84", "sido": "서울특별시", "sigungu": "중구(서)", "location_dong": "신당동", "build_year": "2002"}, {"name": "송파파인타운8단지", "price": 170000, "date": "2026-02-14", "old_price": 169500, "floor": "12", "area": "59", "sido": "서울특별시", "sigungu": "송파구", "location_dong": "장지동", "build_year": "2008"}, {"name": "킨텍스원시티2블럭", "price": 170000, "date": "2026-03-12", "old_price": 150000, "floor": "46", "area": "104", "sido": "경기도", "sigungu": "고양시(경)", "location_dong": "장항동", "build_year": "2019"}, {"name": "인덕원푸르지오엘센트로", "price": 165300, "date": "2026-03-03", "old_price": 160000, "floor": "11", "area": "99", "sido": "경기도", "sigungu": "의왕시", "location_dong": "포일동", "build_year": "2019"}, {"name": "강서한강자이", "price": 160000, "date": "2026-02-12", "old_price": 157000, "floor": "20", "area": "84", "sido": "서울특별시", "sigungu": "강서구(서)", "location_dong": "가양동", "build_year": "2013"}, {"name": "미사역파라곤", "price": 160000, "date": "2026-03-09", "old_price": 152000, "floor": "28", "area": "102", "sido": "경기도", "sigungu": "하남시", "location_dong": "망월동", "build_year": "2021"}, {"name": "꿈마을건영3차", "price": 160000, "date": "2026-03-13", "old_price": 157000, "floor": "12", "area": "133", "sido": "경기도", "sigungu": "안양시(경)", "location_dong": "평촌동", "build_year": "1994"}, {"name": "한라", "price": 159500, "date": "2026-02-06", "old_price": 157000, "floor": "5", "area": "59", "sido": "서울특별시", "sigungu": "서초구", "location_dong": "우면동", "build_year": "1994"}, {"name": "마곡엠밸리8단지", "price": 158000, "date": "2026-03-05", "old_price": 156000, "floor": "3", "area": "84", "sido": "서울특별시", "sigungu": "강서구(서)", "location_dong": "마곡동", "build_year": "2016"}, {"name": "양지마을(5단지)(한양501-514)", "price": 156100, "date": "2026-02-13", "old_price": 154000, "floor": "3", "area": "48", "sido": "경기도", "sigungu": "성남시(경)", "location_dong": "수내동", "build_year": "1992"}, {"name": "고덕리엔파크1단지", "price": 155000, "date": "2026-02-14", "old_price": 153000, "floor": "13", "area": "114", "sido": "서울특별시", "sigungu": "강동구", "location_dong": "강일동", "build_year": "2011"}, {"name": "힐스테이트청계", "price": 154000, "date": "2026-02-20", "old_price": 145000, "floor": "5", "area": "59", "sido": "서울특별시", "sigungu": "동대문구", "location_dong": "답십리동", "build_year": "2018"}, {"name": "삼성광나루", "price": 150000, "date": "2026-03-06", "old_price": 128000, "floor": "4", "area": "59", "sido": "서울특별시", "sigungu": "강동구", "location_dong": "암사동", "build_year": "2002"}, {"name": "산성역포레스티아", "price": 149000, "date": "2026-02-24", "old_price": 148000, "floor": "23", "area": "74", "sido": "경기도", "sigungu": "성남시(경)", "location_dong": "신흥동", "build_year": "2020"}, {"name": "판교풍경채어바니티(5단지)", "price": 145000, "date": "2026-02-24", "old_price": 140000, "floor": "17", "area": "84", "sido": "경기도", "sigungu": "성남시(경)", "location_dong": "대장동", "build_year": "2021"}, {"name": "신성노바빌아파트", "price": 145000, "date": "2026-01-24", "old_price": 134700, "floor": "17", "area": "84", "sido": "서울특별시", "sigungu": "송파구", "location_dong": "풍납동", "build_year": "2000"}, {"name": "씨티극동1", "price": 145000, "date": "2026-02-20", "old_price": 123000, "floor": "16", "area": "80", "sido": "서울특별시", "sigungu": "송파구", "location_dong": "풍납동", "build_year": "1998"}, {"name": "마곡수명산파크2단지", "price": 137500, "date": "2026-02-20", "old_price": 128000, "floor": "12", "area": "84", "sido": "서울특별시", "sigungu": "강서구(서)", "location_dong": "내발산동", "build_year": "2007"}, {"name": "장안힐스테이트", "price": 137500, "date": "2026-03-10", "old_price": 130000, "floor": "14", "area": "114", "sido": "서울특별시", "sigungu": "동대문구", "location_dong": "장안동", "build_year": "2007"}, {"name": "독립문삼호", "price": 136500, "date": "2026-02-20", "old_price": 126700, "floor": "15", "area": "84", "sido": "서울특별시", "sigungu": "서대문구", "location_dong": "영천동", "build_year": "1995"}, {"name": "인덕원 퍼스비엘", "price": 135000, "date": "2026-02-28", "old_price": 130000, "floor": "16", "area": "84", "sido": "경기도", "sigungu": "의왕시", "location_dong": "내손동", "build_year": "분양"}, {"name": "래미안장안", "price": 134000, "date": "2026-02-28", "old_price": 129000, "floor": "17", "area": "115", "sido": "서울특별시", "sigungu": "동대문구", "location_dong": "장안동", "build_year": "2003"}, {"name": "쌍용스윗닷홈", "price": 133000, "date": "2026-02-23", "old_price": 130000, "floor": "8", "area": "84", "sido": "서울특별시", "sigungu": "동작구", "location_dong": "상도동", "build_year": "2003"}, {"name": "판교풍경채어바니티(7단지)", "price": 132000, "date": "2026-02-25", "old_price": 128000, "floor": "15", "area": "84", "sido": "경기도", "sigungu": "성남시(경)", "location_dong": "대장동", "build_year": "2021"}, {"name": "미사강변루나리움", "price": 128500, "date": "2026-03-01", "old_price": 120000, "floor": "24", "area": "84", "sido": "경기도", "sigungu": "하남시", "location_dong": "망월동", "build_year": "2015"}, {"name": "현대3차", "price": 127500, "date": "2026-02-12", "old_price": 124800, "floor": "10", "area": "84", "sido": "서울특별시", "sigungu": "송파구", "location_dong": "거여동", "build_year": "1993"}, {"name": "삼환", "price": 126600, "date": "2026-03-08", "old_price": 125300, "floor": "13", "area": "84", "sido": "서울특별시", "sigungu": "영등포구", "location_dong": "신길동", "build_year": "1997"}, {"name": "상암월드컵파크2단지", "price": 125000, "date": "2026-02-27", "old_price": 123500, "floor": "10", "area": "59", "sido": "서울특별시", "sigungu": "마포구", "location_dong": "상암동", "build_year": "2003"}, {"name": "용산더프라임", "price": 124000, "date": "2026-02-21", "old_price": 102000, "floor": "3", "area": "46", "sido": "서울특별시", "sigungu": "용산구", "location_dong": "원효로1가", "build_year": "2014"}, {"name": "e편한세상금빛그랑메종1단지", "price": 123000, "date": "2026-02-26", "old_price": 114800, "floor": "17", "area": "59", "sido": "경기도", "sigungu": "성남시(경)", "location_dong": "금광동", "build_year": "2023"}, {"name": "신정마을주공1", "price": 120000, "date": "2026-02-27", "old_price": 118000, "floor": "3", "area": "59", "sido": "경기도", "sigungu": "용인시(경)", "location_dong": "풍덕천동", "build_year": "2000"}, {"name": "동보", "price": 119500, "date": "2026-02-22", "old_price": 119000, "floor": "18", "area": "84", "sido": "서울특별시", "sigungu": "영등포구", "location_dong": "양평동5가", "build_year": "1998"}, {"name": "현대1", "price": 119000, "date": "2026-03-04", "old_price": 113000, "floor": "9", "area": "84", "sido": "서울특별시", "sigungu": "강서구(서)", "location_dong": "염창동", "build_year": "1994"}, {"name": "풍림1", "price": 118000, "date": "2026-02-24", "old_price": 106800, "floor": "7", "area": "80", "sido": "서울특별시", "sigungu": "송파구", "location_dong": "가락동", "build_year": "1995"}, {"name": "롯데낙천대", "price": 117000, "date": "2026-03-04", "old_price": 112000, "floor": "13", "area": "55", "sido": "서울특별시", "sigungu": "동작구", "location_dong": "신대방동", "build_year": "2003"}, {"name": "우성4", "price": 116000, "date": "2026-02-24", "old_price": 113000, "floor": "5", "area": "84", "sido": "서울특별시", "sigungu": "영등포구", "location_dong": "신길동", "build_year": "1991"}, {"name": "서울대벤처타운역 푸르지오", "price": 115000, "date": "2026-03-13", "old_price": 109427, "floor": "6", "area": "84", "sido": "서울특별시", "sigungu": "관악구", "location_dong": "신림동", "build_year": "분양"}, {"name": "문정시영", "price": 114500, "date": "2026-03-07", "old_price": 110000, "floor": "2", "area": "46", "sido": "서울특별시", "sigungu": "송파구", "location_dong": "문정동", "build_year": "1989"}, {"name": "평촌래미안푸르지오", "price": 112000, "date": "2026-03-05", "old_price": 94500, "floor": "22", "area": "68", "sido": "경기도", "sigungu": "안양시(경)", "location_dong": "비산동", "build_year": "2022"}, {"name": "교문(동양고속)", "price": 111000, "date": "2026-03-02", "old_price": 100000, "floor": "15", "area": "134", "sido": "경기도", "sigungu": "구리시", "location_dong": "교문동", "build_year": "1994"}, {"name": "상현마을수지센트럴아이파크", "price": 110000, "date": "2026-03-12", "old_price": 105800, "floor": "15", "area": "101", "sido": "경기도", "sigungu": "용인시(경)", "location_dong": "상현동", "build_year": "2006"}, {"name": "일신건영휴먼빌", "price": 110000, "date": "2026-03-06", "old_price": 109000, "floor": "6", "area": "84", "sido": "서울특별시", "sigungu": "강서구(서)", "location_dong": "염창동", "build_year": "2004"}, {"name": "남성", "price": 109000, "date": "2026-02-14", "old_price": 104700, "floor": "10", "area": "58", "sido": "서울특별시", "sigungu": "영등포구", "location_dong": "문래동2가", "build_year": "1983"}, {"name": "東분당파크뷰", "price": 103000, "date": "2026-02-28", "old_price": 95000, "floor": "9", "area": "100", "sido": "경기도", "sigungu": "성남시(경)", "location_dong": "도촌동", "build_year": "2013"}, {"name": "하남호반써밋에듀파크", "price": 102000, "date": "2026-02-19", "old_price": 100000, "floor": "14", "area": "59", "sido": "경기도", "sigungu": "하남시", "location_dong": "신장동", "build_year": "2021"}, {"name": "홍제현대", "price": 100700, "date": "2026-02-28", "old_price": 98000, "floor": "9", "area": "83", "sido": "서울특별시", "sigungu": "서대문구", "location_dong": "홍제동", "build_year": "1992"}, {"name": "포레나 광교상현", "price": 99500, "date": "2026-03-09", "old_price": 97600, "floor": "2", "area": "92", "sido": "경기도", "sigungu": "용인시(경)", "location_dong": "상현동", "build_year": "2018"}, {"name": "수명산SKVIEW", "price": 96000, "date": "2026-02-28", "old_price": 95000, "floor": "4", "area": "127", "sido": "서울특별시", "sigungu": "양천구", "location_dong": "신월동", "build_year": "2009"}, {"name": "동신", "price": 95000, "date": "2026-02-20", "old_price": 84000, "floor": "2", "area": "106", "sido": "서울특별시", "sigungu": "노원구", "location_dong": "월계동", "build_year": "1983"}, {"name": "문화촌현대", "price": 90000, "date": "2026-02-13", "old_price": 86600, "floor": "15", "area": "84", "sido": "서울특별시", "sigungu": "서대문구", "location_dong": "홍제동", "build_year": "2002"}, {"name": "현대", "price": 85000, "date": "2026-02-25", "old_price": 83500, "floor": "15", "area": "59", "sido": "서울특별시", "sigungu": "노원구", "location_dong": "월계동", "build_year": "2000"}, {"name": "가양6단지", "price": 84500, "date": "2026-03-06", "old_price": 83500, "floor": "8", "area": "39", "sido": "서울특별시", "sigungu": "강서구(서)", "location_dong": "가양동", "build_year": "1992"}, {"name": "신봉마을엘지빌리지5차(B)", "price": 84250, "date": "2026-03-07", "old_price": 84000, "floor": "7", "area": "141", "sido": "경기도", "sigungu": "용인시(경)", "location_dong": "신봉동", "build_year": "2002"}, {"name": "수원하늘채더퍼스트1단지", "price": 81500, "date": "2026-02-27", "old_price": 80200, "floor": "15", "area": "84", "sido": "경기도", "sigungu": "수원시(경)", "location_dong": "곡반정동", "build_year": "2022"}, {"name": "공릉2신도브래뉴아파트", "price": 80000, "date": "2026-03-07", "old_price": 77800, "floor": "6", "area": "84", "sido": "서울특별시", "sigungu": "노원구", "location_dong": "공릉동", "build_year": "2002"}, {"name": "초원한양", "price": 79500, "date": "2026-03-05", "old_price": 78000, "floor": "12", "area": "59", "sido": "경기도", "sigungu": "안양시(경)", "location_dong": "평촌동", "build_year": "1993"}, {"name": "신도1차아파트", "price": 79300, "date": "2026-02-27", "old_price": 74450, "floor": "7", "area": "72", "sido": "서울특별시", "sigungu": "노원구", "location_dong": "공릉동", "build_year": "2002"}, {"name": "창동2차현대", "price": 78500, "date": "2026-03-02", "old_price": 77000, "floor": "13", "area": "59", "sido": "서울특별시", "sigungu": "도봉구", "location_dong": "창동", "build_year": "2001"}, {"name": "시앤디아파트", "price": 77500, "date": "2026-03-03", "old_price": 77000, "floor": "6", "area": "54", "sido": "서울특별시", "sigungu": "강동구", "location_dong": "명일동", "build_year": "2025"}, {"name": "해주드림빌", "price": 75000, "date": "2026-03-02", "old_price": 74000, "floor": "12", "area": "78", "sido": "서울특별시", "sigungu": "은평구", "location_dong": "녹번동", "build_year": "2001"}, {"name": "해태", "price": 73000, "date": "2026-02-25", "old_price": 70000, "floor": "9", "area": "84", "sido": "서울특별시", "sigungu": "강서구(서)", "location_dong": "공항동", "build_year": "2000"}, {"name": "미영리치타운103", "price": 72000, "date": "2026-02-10", "old_price": 66500, "floor": "9", "area": "84", "sido": "서울특별시", "sigungu": "중랑구", "location_dong": "중화동", "build_year": "2006"}, {"name": "대림미소나눔", "price": 71000, "date": "2026-03-12", "old_price": 67500, "floor": "4", "area": "79", "sido": "서울특별시", "sigungu": "송파구", "location_dong": "문정동", "build_year": "2004"}, {"name": "테라펠리체송파", "price": 71000, "date": "2026-03-03", "old_price": 70500, "floor": "16", "area": "33", "sido": "서울특별시", "sigungu": "송파구", "location_dong": "가락동", "build_year": "2021"}, {"name": "대우아이빌", "price": 69000, "date": "2026-03-06", "old_price": 67200, "floor": "6", "area": "35", "sido": "서울특별시", "sigungu": "서초구", "location_dong": "잠원동", "build_year": "2001"}, {"name": "다산유보라마크뷰", "price": 66500, "date": "2026-02-25", "old_price": 61200, "floor": "23", "area": "59", "sido": "경기도", "sigungu": "남양주시", "location_dong": "다산동", "build_year": "2024"}, {"name": "아름마을일신건영", "price": 63000, "date": "2026-02-28", "old_price": 62000, "floor": "15", "area": "79", "sido": "경기도", "sigungu": "구리시", "location_dong": "인창동", "build_year": "2001"}, {"name": "범우", "price": 44500, "date": "2026-02-15", "old_price": 40500, "floor": "3", "area": "46", "sido": "경기도", "sigungu": "구리시", "location_dong": "수택동", "build_year": "1988"}, {"name": "두란", "price": 44300, "date": "2026-03-12", "old_price": 28800, "floor": "4", "area": "68", "sido": "서울특별시", "sigungu": "양천구", "location_dong": "목동", "build_year": "1996"}, {"name": "동아", "price": 34300, "date": "2026-03-07", "old_price": 27400, "floor": "5", "area": "58", "sido": "인천광역시", "sigungu": "부평구", "location_dong": "부개동", "build_year": "1988"}, {"name": "청담신원아침도시마인", "price": 34000, "date": "2026-02-20", "old_price": 33250, "floor": "6", "area": "28", "sido": "서울특별시", "sigungu": "강남구", "location_dong": "청담동", "build_year": "2013"}];
+        const aptData = [{"name": "경남아너스빌(1608-8)", "price": 192000, "date": "2026-02-20", "old_price": 151000, "rise_rate": 27.2, "floor": "8", "area": "84", "sido": "서울특별시", "sigungu": "서초구", "location_dong": "서초동", "build_year": "2006"}, {"name": "방배임광3차", "price": 150000, "date": "2026-03-11", "old_price": 123500, "rise_rate": 21.5, "floor": "2", "area": "51", "sido": "서울특별시", "sigungu": "서초구", "location_dong": "방배동", "build_year": "1988"}, {"name": "e편한세상금빛그랑메종5단지", "price": 111800, "date": "2026-02-28", "old_price": 106000, "rise_rate": 5.5, "floor": "15", "area": "74", "sido": "경기도", "sigungu": "성남시(경)", "location_dong": "금광동", "build_year": "2023"}, {"name": "양지참빛", "price": 41000, "date": "2026-02-09", "old_price": 39000, "rise_rate": 5.1, "floor": "11", "area": "49", "sido": "경기도", "sigungu": "성남시(경)", "location_dong": "성남동", "build_year": "2003"}];
         let quintileChartInstance = null;
 
         function openQuintileModal() {
@@ -3376,14 +1622,14 @@
           aptData.forEach(apt => {
             const price = apt.price;
             for (let i = 0; i < brackets.length - 1; i++) {
-              if (price >= brackets[i] && price < brackets[i + 1]) {
+              // 첫 구간은 0 포함(>=), 이후 구간은 하한 초과(>) · 상한 이하(<=)
+              const inRange = i === 0
+                ? (price >= brackets[0] && price <= brackets[1])
+                : (price > brackets[i] && price <= brackets[i + 1]);
+              if (inRange) {
                 counts[i]++;
                 break;
               }
-            }
-            // 정확히 최대값인 경우 마지막 구간에 포함
-            if (price === maxPrice && price === brackets[brackets.length - 1]) {
-              counts[counts.length - 1]++;
             }
           });
 
@@ -3514,9 +1760,11 @@
 
         // 특정 가격대의 아파트 목록 표시
         function showAptListForBracket(bracketStart, bracketEnd, label) {
-          // 해당 가격대의 아파트 필터링
+          // 해당 가격대의 아파트 필터링 (하한 초과 ~ 상한 이하, 첫 구간은 0 포함)
           const filteredApts = aptData.filter(apt => {
-            return apt.price >= bracketStart && apt.price < bracketEnd;
+            return bracketStart === 0
+              ? (apt.price >= bracketStart && apt.price <= bracketEnd)
+              : (apt.price > bracketStart && apt.price <= bracketEnd);
           });
 
           // 가격 높은 순으로 정렬
@@ -3573,11 +1821,197 @@
           document.getElementById('aptListModal').style.display = 'none';
         }
 
+        // ── 트리맵 상승률 보기 ──
+        let currentTreemapFilter = 'all';
+
+        function openTreemapModal() {
+          document.getElementById('treemapModal').style.display = 'block';
+          currentTreemapFilter = 'all';
+          renderTreemap();
+        }
+        function closeTreemapModal() {
+          document.getElementById('treemapModal').style.display = 'none';
+        }
+
+        function setTreemapFilter(type) {
+          currentTreemapFilter = type;
+          ['all','84','59'].forEach(t => {
+            const btn = document.getElementById('tmBtn' + (t==='all'?'All':t));
+            if (btn) btn.classList.toggle('tm-active', t === type);
+          });
+          const label = type === 'all' ? '전체' : type + '㎡ 타입';
+          const sub = document.getElementById('treemapSubtitle');
+          if (sub) sub.textContent = label + ' · 직전 최고가 대비 상승률 상위 20개 단지';
+          renderTreemap();
+        }
+
+        function renderTreemap() {
+          const container = document.getElementById('treemapContainer');
+          container.innerHTML = '';
+          const tooltip = document.getElementById('treemapTooltip');
+
+          // 평형 필터 (±3㎡ 허용)
+          function matchArea(a, target) {
+            const v = parseFloat(a.area);
+            return !isNaN(v) && Math.abs(v - target) <= 3;
+          }
+
+          let pool = aptData.filter(a => a.rise_rate > 0);
+          if (currentTreemapFilter === '84') pool = pool.filter(a => matchArea(a, 84));
+          else if (currentTreemapFilter === '59') pool = pool.filter(a => matchArea(a, 59));
+
+          // 상승률 > 0인 항목 정렬 후 top20
+          const sorted = pool
+            .sort((a, b) => b.rise_rate - a.rise_rate)
+            .slice(0, 20);
+
+          if (sorted.length === 0) {
+            container.innerHTML = '<p style="color:#9ca3af;text-align:center;padding:60px;">상승 데이터가 없습니다.</p>';
+            return;
+          }
+
+          const W = container.offsetWidth;
+          const H = container.offsetHeight;
+          const total = sorted.reduce((s, a) => s + a.rise_rate, 0);
+          const items = sorted.map(a => ({ ...a, value: a.rise_rate }));
+
+          // 스쿼리파이드 트리맵
+          function squarify(items, x, y, w, h) {
+            if (!items.length) return [];
+            const rects = [];
+            let rem = [...items];
+            let cx = x, cy = y, cw = w, ch = h;
+            const tot = items.reduce((s,i) => s+i.value, 0);
+
+            while (rem.length > 0) {
+              const remTot = rem.reduce((s,i) => s+i.value, 0);
+              let row = [], rowVal = 0, bestRatio = Infinity;
+
+              for (let i = 0; i < rem.length; i++) {
+                row.push(rem[i]); rowVal += rem[i].value;
+                const short = Math.min(cw, ch);
+                const long  = Math.max(cw, ch);
+                const rowArea = (rowVal / remTot) * (cw * ch);
+                const rowShort = rowArea / long;
+                let maxR = 0;
+                for (const it of row) {
+                  const itArea = (it.value / rowVal) * rowArea;
+                  const itOther = itArea / rowShort;
+                  maxR = Math.max(maxR, Math.max(rowShort/itOther, itOther/rowShort));
+                }
+                if (maxR > bestRatio) { row.pop(); rowVal -= rem[i].value; break; }
+                bestRatio = maxR;
+              }
+              if (!row.length) { row = [rem[0]]; rowVal = rem[0].value; }
+
+              const rowFrac = rowVal / remTot;
+              if (cw <= ch) {
+                const rowH = ch * rowFrac;
+                let rx = cx;
+                for (const it of row) {
+                  const itW = cw * (it.value / rowVal);
+                  rects.push({ x:rx, y:cy, w:itW, h:rowH, item:it });
+                  rx += itW;
+                }
+                cy += rowH; ch -= rowH;
+              } else {
+                const rowW = cw * rowFrac;
+                let ry = cy;
+                for (const it of row) {
+                  const itH = ch * (it.value / rowVal);
+                  rects.push({ x:cx, y:ry, w:rowW, h:itH, item:it });
+                  ry += itH;
+                }
+                cx += rowW; cw -= rowW;
+              }
+              rem = rem.slice(row.length);
+            }
+            return rects;
+          }
+
+          // 상승률에 따른 색상 (낮=연한빨강, 높=진한빨강)
+          const maxRate = sorted[0].rise_rate;
+          function rateColor(rate) {
+            const t = Math.min(rate / maxRate, 1);
+            const hue = 6;
+            const sat = 70 + t * 25;
+            const lgt = 48 - t * 20;
+            return `hsl(${hue},${sat}%,${lgt}%)`;
+          }
+
+          const rects = squarify(items, 0, 0, W, H);
+
+          rects.forEach((r, idx) => {
+            const it = r.item;
+            const block = document.createElement('div');
+            block.className = 'treemap-block';
+            block.style.left   = r.x + 'px';
+            block.style.top    = r.y + 'px';
+            block.style.width  = Math.max(r.w - 2, 1) + 'px';
+            block.style.height = Math.max(r.h - 2, 1) + 'px';
+            block.style.background = rateColor(it.rise_rate);
+
+            // 구+동 표기
+            const sigungu = it.sigungu.replace(/\(.*?\)/g, '').trim();
+            const regionLabel = (sigungu + ' ' + (it.location_dong || '')).trim();
+
+            // 상승률 비례 글씨 크기 (최대/최소 비율 기준)
+            const rateRatio = it.rise_rate / maxRate;
+            const minDim = Math.min(r.w, r.h);
+            const baseFont = minDim * (0.10 + rateRatio * 0.08);
+            const regionFs = Math.max(8,  Math.min(12, baseFont * 0.70));
+            const nameFs   = Math.max(9,  Math.min(16, baseFont * 0.90));
+            const rateFs   = Math.max(11, Math.min(22, baseFont * 1.15));
+            const absFs    = Math.max(8,  Math.min(13, baseFont * 0.75));
+            const inc = it.price - it.old_price;
+            const incStr = inc >= 10000
+              ? `+${(inc/10000).toFixed(1)}억`
+              : `+${inc.toLocaleString()}만`;
+            if (minDim > 50) {
+              block.innerHTML = `
+                <div class="treemap-region" style="font-size:${regionFs}px">${regionLabel}</div>
+                <div class="treemap-name"   style="font-size:${nameFs}px">${it.name}</div>
+                <div class="treemap-rate"   style="font-size:${rateFs}px">+${it.rise_rate}%</div>
+                <div style="font-size:${absFs}px;color:rgba(255,255,255,0.85);font-weight:600;">${incStr}</div>
+              `;
+            } else if (minDim > 28) {
+              block.innerHTML = `
+                <div class="treemap-name" style="font-size:${Math.max(8,nameFs*0.8)}px;color:#fff;font-weight:700;text-align:center;padding:2px;">${it.name}</div>
+                <div style="font-size:${Math.max(9,rateFs*0.8)}px;color:#fff;font-weight:800;">+${it.rise_rate}%</div>
+              `;
+            }
+
+            // 툴팁
+            block.addEventListener('mouseenter', e => {
+              tooltip.style.display = 'block';
+              const sigunguFull = it.sigungu.replace(/\(.*?\)/g, '').trim();
+              tooltip.innerHTML = `
+                <div style="font-weight:700;font-size:14px;margin-bottom:4px;">${it.name}</div>
+                <div style="color:#9ca3af;">${sigunguFull} ${it.location_dong}</div>
+                <div style="margin-top:6px;">신고가: <b>${it.price.toLocaleString()}만원</b></div>
+                <div>직전 최고가: ${it.old_price.toLocaleString()}만원</div>
+                <div style="color:#4ade80;font-weight:700;font-size:15px;margin-top:4px;">▲ +${it.rise_rate}% 상승</div>
+                <div style="color:#9ca3af;font-size:12px;">${it.date} | ${it.floor}층 | ${it.area}㎡</div>
+              `;
+            });
+            block.addEventListener('mousemove', e => {
+              tooltip.style.left = (e.clientX + 14) + 'px';
+              tooltip.style.top  = (e.clientY - 10) + 'px';
+            });
+            block.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+
+            container.appendChild(block);
+          });
+        }
+
         // 그래프 버튼 클릭 이벤트
         document.getElementById('chip-quintile-graph').addEventListener('click', openQuintileModal);
 
         // 비교단지 묶기 버튼 클릭 이벤트
         document.getElementById('chip-compare').addEventListener('click', openCompareModal);
+
+        // 트리맵 버튼 클릭 이벤트
+        document.getElementById('chip-treemap').addEventListener('click', openTreemapModal);
 
         // 모달 배경 클릭 시 닫기
         window.onclick = function(event) {
@@ -3592,6 +2026,10 @@
           }
           if (event.target === compareModal) {
             closeCompareModal();
+          }
+          const treemapModal = document.getElementById('treemapModal');
+          if (event.target === treemapModal) {
+            closeTreemapModal();
           }
         };
 
