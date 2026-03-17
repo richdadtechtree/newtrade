@@ -3,7 +3,7 @@
         <head>
         <meta charset="utf-8"/>
         <meta content="width=device-width, initial-scale=1" name="viewport"/>
-        <title>부산 신고가 - 2026-03-18 05:07</title>
+        <title>부산 신고가 - 2026-03-14 10:46</title>
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
         <style>
           :root {
@@ -400,75 +400,6 @@
           .compare-count strong {
             color: #f5576c;
           }
-
-          /* 트리맵 상승률 모달 */
-          .treemap-modal {
-            display: none; position: fixed; z-index: 1000;
-            left: 0; top: 0; width: 100%; height: 100%;
-            overflow: auto; background-color: rgba(0,0,0,0.7);
-          }
-          .treemap-modal-content {
-            background: #1a1a2e; margin: 3% auto; border-radius: 20px;
-            width: 95%; max-width: 1100px; max-height: 90vh;
-            overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-            display: flex; flex-direction: column;
-          }
-          .treemap-modal-header {
-            padding: 18px 28px;
-            background: linear-gradient(135deg, #11998e, #38ef7d);
-            color: #fff; display: flex; justify-content: space-between; align-items: center;
-          }
-          .treemap-modal-header h2 { margin: 0; font-size: 1.3em; color: #fff; }
-          .treemap-modal-close {
-            font-size: 2em; font-weight: bold; cursor: pointer;
-            color: #fff; line-height: 1; transition: transform 0.2s;
-          }
-          .treemap-modal-close:hover { transform: scale(1.2); }
-          .treemap-modal-body { padding: 16px; overflow-y: auto; flex: 1; }
-          #treemapContainer {
-            position: relative; width: 100%;
-            height: 520px; background: #0d1117; border-radius: 12px; overflow: hidden;
-          }
-          .treemap-block {
-            position: absolute; box-sizing: border-box;
-            border: 2px solid rgba(255,255,255,0.08);
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            cursor: pointer; transition: filter 0.15s;
-            overflow: hidden; border-radius: 4px;
-          }
-          .treemap-block:hover { filter: brightness(1.2); z-index: 10; }
-          .treemap-region {
-            font-size: 11px; color: rgba(255,255,255,0.75);
-            font-weight: 500; text-align: center; line-height: 1.2;
-            padding: 0 4px; margin-bottom: 2px;
-          }
-          .treemap-name {
-            font-size: 13px; font-weight: 700; color: #fff;
-            text-align: center; line-height: 1.3;
-            padding: 0 6px; word-break: keep-all;
-          }
-          .treemap-rate {
-            font-size: 15px; font-weight: 800; color: #fff;
-            margin-top: 4px;
-          }
-          .treemap-tooltip {
-            position: fixed; background: rgba(0,0,0,0.92); color: #fff;
-            padding: 10px 14px; border-radius: 10px; font-size: 13px;
-            pointer-events: none; z-index: 9999; display: none;
-            line-height: 1.6; max-width: 260px;
-            border: 1px solid rgba(255,255,255,0.15);
-          }
-          .tm-filter-btn {
-            padding: 6px 18px; border-radius: 999px; border: 2px solid rgba(255,255,255,0.25);
-            background: rgba(255,255,255,0.08); color: #fff; font-size: 13px;
-            font-weight: 600; cursor: pointer; transition: all 0.18s;
-          }
-          .tm-filter-btn:hover { background: rgba(255,255,255,0.18); }
-          .tm-filter-btn.tm-active {
-            background: linear-gradient(135deg, #dc2626, #991b1b);
-            border-color: #dc2626; color: #fff;
-          }
         </style>
         </head>
         <body>
@@ -477,21 +408,18 @@
           <div class="page">
             <header class="header">
               <h1>부산 신고가</h1>
-              <p class="sub">2026-03-18 05:07 기준 · 총 13개 아파트</p>
+              <p class="sub">2026-03-14 10:46 기준 · 총 3개 아파트</p>
 
               <!-- 상단 칩: 연식별 필터 및 그래프 버튼 -->
               <div class="chips">
-                <span class="chip" id="chip-old">2000년대 미만 2건</span>
-                <span class="chip" id="chip-very-young">입주 5년 이하 5건</span>
-                <span class="chip" id="chip-young">입주 10년 이하 5건</span>
+                <span class="chip" id="chip-old">2000년대 미만 0건</span>
+                <span class="chip" id="chip-very-young">입주 5년 이하 1건</span>
+                <span class="chip" id="chip-young">입주 10년 이하 3건</span>
                 <span class="chip chip-graph" id="chip-quintile-graph" style="background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border: none; font-weight: 600;">
                   📊 신고가 분위그래프
                 </span>
                 <span class="chip chip-compare" id="chip-compare" style="background: linear-gradient(135deg, #f093fb, #f5576c); color: #fff; border: none; font-weight: 600;">
                   🔗 비교단지 묶기
-                </span>
-                <span class="chip chip-treemap" id="chip-treemap" style="background: linear-gradient(135deg, #11998e, #38ef7d); color: #fff; border: none; font-weight: 600;">
-                  🗺️ 맵으로 상승률 보기
                 </span>
               </div>
 
@@ -542,217 +470,41 @@
 
             <section class="cards" id="cards">
               
-            <section class="card" data-region="부산광역시 해운대구"
-                     data-build-year="2011" data-young="0"
-                     data-very-young="0" data-old="0" data-area="83"
-                     data-kakao-query="해운대구 우동 해운대 I PARK 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>해운대 I PARK <span class='year-badge'>2011년</span> <span class="tag">전용면적 83㎡</span></h3>
-              <div class="card-sub">📍 부산광역시 해운대구 우동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
+            <section class="card" data-region="부산광역시 수영구"
+                     data-build-year="2019" data-young="1"
+                     data-very-young="0" data-old="0" data-area="84"
+                     data-kakao-query="수영구 남천동 남천금호어울림더비치 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
+              <h3>남천금호어울림더비치 <span class='year-badge young'>2019년</span> <span class="tag">전용면적 84㎡</span></h3>
+              <div class="card-sub">📍 부산광역시 수영구 남천동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
               <div class="grid">
                 <div class="k">이번 실거래</div>
-                <div><span class="highlight">100,000만원</span> (2026-03-08 | 51층)</div>
+                <div><span class="highlight">123,000만원</span> (2026-03-07 | 14층)</div>
                 <div class="k">직전 최고가</div>
-                <div>98,000만원 (2021-06-12 | 36층)</div>
+                <div>110,000만원 (2021-05-29 | 11층)</div>
                 <div class="k">변화</div>
-                <div class="rise">2,000만원 상승 (2.0%)</div>
+                <div class="rise">13,000만원 상승 (11.8%)</div>
                 <div class="k">특이사항</div>
                 <div>
                     
                     
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="부산광역시 강서구"
-                     data-build-year="2026" data-young="1"
-                     data-very-young="1" data-old="0" data-area="119"
-                     data-kakao-query="강서구(부산) 대저2동 부산에코델타시티 대방 엘리움 리버뷰 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>부산에코델타시티 대방 엘리움 리버뷰 <span class='year-badge new'>분양</span> <span class="tag">전용면적 119㎡</span></h3>
-              <div class="card-sub">📍 부산광역시 강서구(부산) 대저2동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">94,674만원</span> (2026-03-10 | 7층)</div>
-                <div class="k">직전 최고가</div>
-                <div>81,719만원 (2026-01-20 | 2층)</div>
-                <div class="k">변화</div>
-                <div class="rise">12,955만원 상승 (15.9%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="부산광역시 부산진구"
-                     data-build-year="2026" data-young="1"
-                     data-very-young="1" data-old="0" data-area="59"
-                     data-kakao-query="부산진구 양정동 양정 롯데캐슬 프론티엘 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>양정 롯데캐슬 프론티엘 <span class='year-badge new'>분양</span> <span class="tag">전용면적 59㎡</span></h3>
-              <div class="card-sub">📍 부산광역시 부산진구 양정동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">69,720만원</span> (2026-02-21 | 13층)</div>
-                <div class="k">직전 최고가</div>
-                <div>68,600만원 (2025-10-25 | 22층)</div>
-                <div class="k">변화</div>
-                <div class="rise">1,120만원 상승 (1.6%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    <span class="badge-rank rank-84">부산진구 84타입 NO.3 단지</span>
-                    <span class="badge-rank rank-59">부산진구 59타입 NO.1 단지</span>
                 </div>
               </div>
             </section>
             
 
             <section class="card" data-region="부산광역시 연제구"
-                     data-build-year="2023" data-young="1"
+                     data-build-year="2024" data-young="1"
                      data-very-young="1" data-old="0" data-area="59"
-                     data-kakao-query="연제구 거제동 쌍용더플래티넘거제아시아드 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>쌍용더플래티넘거제아시아드 <span class='year-badge very-young'>2023년</span> <span class="tag">전용면적 59㎡</span></h3>
+                     data-kakao-query="연제구 거제동 레이카운티 단지 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
+              <h3>레이카운티(4단지) <span class='year-badge very-young'>2024년</span> <span class="tag">전용면적 59㎡</span></h3>
               <div class="card-sub">📍 부산광역시 연제구 거제동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
               <div class="grid">
                 <div class="k">이번 실거래</div>
-                <div><span class="highlight">68,000만원</span> (2026-03-14 | 19층)</div>
+                <div><span class="highlight">68,200만원</span> (2026-02-21 | 24층)</div>
                 <div class="k">직전 최고가</div>
-                <div>67,500만원 (2026-02-07 | 27층)</div>
+                <div>66,500만원 (2025-11-07 | 26층)</div>
                 <div class="k">변화</div>
-                <div class="rise">500만원 상승 (0.7%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="부산광역시 부산진구"
-                     data-build-year="2023" data-young="1"
-                     data-very-young="1" data-old="0" data-area="59"
-                     data-kakao-query="부산진구 전포동 e편한세상시민공원1단지 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>e편한세상시민공원1단지 <span class='year-badge very-young'>2023년</span> <span class="tag">전용면적 59㎡</span></h3>
-              <div class="card-sub">📍 부산광역시 부산진구 전포동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">65,500만원</span> (2026-03-14 | 32층)</div>
-                <div class="k">직전 최고가</div>
-                <div>65,000만원 (2026-02-21 | 32층)</div>
-                <div class="k">변화</div>
-                <div class="rise">500만원 상승 (0.8%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    <span class="badge-rank rank-59">부산진구 59타입 NO.5 단지</span>
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="부산광역시 동래구"
-                     data-build-year="1979" data-young="0"
-                     data-very-young="0" data-old="1" data-area="116"
-                     data-kakao-query="동래구 수안동 금양해바라기1 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>금양해바라기1 <span class='year-badge old'>1979년</span> <span class="tag">전용면적 116㎡</span></h3>
-              <div class="card-sub">📍 부산광역시 동래구 수안동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">65,000만원</span> (2026-03-09 | 3층)</div>
-                <div class="k">직전 최고가</div>
-                <div>53,500만원 (2019-08-13 | 9층)</div>
-                <div class="k">변화</div>
-                <div class="rise">11,500만원 상승 (21.5%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="부산광역시 부산진구"
-                     data-build-year="2021" data-young="1"
-                     data-very-young="1" data-old="0" data-area="59"
-                     data-kakao-query="부산진구 전포동 서면아이파크2단지 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>서면아이파크2단지 <span class='year-badge very-young'>2021년</span> <span class="tag">전용면적 59㎡</span></h3>
-              <div class="card-sub">📍 부산광역시 부산진구 전포동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">59,800만원</span> (2026-03-14 | 26층)</div>
-                <div class="k">직전 최고가</div>
-                <div>58,000만원 (2025-10-02 | 29층)</div>
-                <div class="k">변화</div>
-                <div class="rise">1,800만원 상승 (3.1%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="부산광역시 북구"
-                     data-build-year="2001" data-young="0"
-                     data-very-young="0" data-old="0" data-area="119"
-                     data-kakao-query="북구(부산) 화명동 화명2차현대 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>화명2차현대 <span class='year-badge'>2001년</span> <span class="tag">전용면적 119㎡</span></h3>
-              <div class="card-sub">📍 부산광역시 북구(부산) 화명동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">46,000만원</span> (2026-03-14 | 14층)</div>
-                <div class="k">직전 최고가</div>
-                <div>45,600만원 (2025-10-18 | 5층)</div>
-                <div class="k">변화</div>
-                <div class="rise">400만원 상승 (0.9%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="부산광역시 북구"
-                     data-build-year="2002" data-young="0"
-                     data-very-young="0" data-old="0" data-area="59"
-                     data-kakao-query="북구(부산) 화명동 코오롱하늘채2차 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>코오롱하늘채2차 <span class='year-badge'>2002년</span> <span class="tag">전용면적 59㎡</span></h3>
-              <div class="card-sub">📍 부산광역시 북구(부산) 화명동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">45,900만원</span> (2026-03-14 | 22층)</div>
-                <div class="k">직전 최고가</div>
-                <div>45,100만원 (2021-06-08 | 14층)</div>
-                <div class="k">변화</div>
-                <div class="rise">800만원 상승 (1.8%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="부산광역시 동래구"
-                     data-build-year="1979" data-young="0"
-                     data-very-young="0" data-old="1" data-area="63"
-                     data-kakao-query="동래구 수안동 새동래1 가라동 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>새동래1(가~라동) <span class='year-badge old'>1979년</span> <span class="tag">전용면적 63㎡</span></h3>
-              <div class="card-sub">📍 부산광역시 동래구 수안동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">36,000만원</span> (2026-03-13 | 8층)</div>
-                <div class="k">직전 최고가</div>
-                <div>34,900만원 (2025-10-24 | 3층)</div>
-                <div class="k">변화</div>
-                <div class="rise">1,100만원 상승 (3.2%)</div>
+                <div class="rise">1,700만원 상승 (2.6%)</div>
                 <div class="k">특이사항</div>
                 <div>
                     
@@ -763,62 +515,18 @@
             
 
             <section class="card" data-region="부산광역시 연제구"
-                     data-build-year="2012" data-young="0"
-                     data-very-young="0" data-old="0" data-area="76"
-                     data-kakao-query="연제구 연산동 신우피렌체 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>신우피렌체 <span class='year-badge'>2012년</span> <span class="tag">전용면적 76㎡</span></h3>
+                     data-build-year="2018" data-young="1"
+                     data-very-young="0" data-old="0" data-area="82"
+                     data-kakao-query="연제구 연산동 시청역더리체 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
+              <h3>시청역더리체 <span class='year-badge young'>2018년</span> <span class="tag">전용면적 82㎡</span></h3>
               <div class="card-sub">📍 부산광역시 연제구 연산동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
               <div class="grid">
                 <div class="k">이번 실거래</div>
-                <div><span class="highlight">29,400만원</span> (2026-03-14 | 7층)</div>
+                <div><span class="highlight">34,500만원</span> (2026-02-26 | 15층)</div>
                 <div class="k">직전 최고가</div>
-                <div>27,000만원 (2022-03-12 | 6층)</div>
+                <div>34,000만원 (2022-04-15 | 18층)</div>
                 <div class="k">변화</div>
-                <div class="rise">2,400만원 상승 (8.9%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="부산광역시 사하구"
-                     data-build-year="2005" data-young="0"
-                     data-very-young="0" data-old="0" data-area="83"
-                     data-kakao-query="사하구 괴정동 천아하늘정원 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>천아하늘정원 <span class='year-badge'>2005년</span> <span class="tag">전용면적 83㎡</span></h3>
-              <div class="card-sub">📍 부산광역시 사하구 괴정동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">26,000만원</span> (2026-03-15 | 8층)</div>
-                <div class="k">직전 최고가</div>
-                <div>24,500만원 (2020-12-05 | 15층)</div>
-                <div class="k">변화</div>
-                <div class="rise">1,500만원 상승 (6.1%)</div>
-                <div class="k">특이사항</div>
-                <div>
-                    
-                    
-                </div>
-              </div>
-            </section>
-            
-
-            <section class="card" data-region="부산광역시 부산진구"
-                     data-build-year="2004" data-young="0"
-                     data-very-young="0" data-old="0" data-area="70"
-                     data-kakao-query="부산진구 부전동 해오름2차 아파트" onclick="openKakaoMap(this)" style="cursor:pointer;">
-              <h3>해오름2차 <span class='year-badge'>2004년</span> <span class="tag">전용면적 70㎡</span></h3>
-              <div class="card-sub">📍 부산광역시 부산진구 부전동 <span style="color:#007AFF; font-size:0.9em;">🗺️ 지도보기</span></div>
-              <div class="grid">
-                <div class="k">이번 실거래</div>
-                <div><span class="highlight">20,500만원</span> (2026-02-19 | 10층)</div>
-                <div class="k">직전 최고가</div>
-                <div>19,700만원 (2020-06-26 | 7층)</div>
-                <div class="k">변화</div>
-                <div class="rise">800만원 상승 (4.1%)</div>
+                <div class="rise">500만원 상승 (1.5%)</div>
                 <div class="k">특이사항</div>
                 <div>
                     
@@ -855,28 +563,6 @@
                     비슷한 가격대(1~3천만원 차이)의 단지를 짝지어 보여드립니다.</p>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 트리맵 상승률 보기 모달 -->
-          <div id="treemapModal" class="treemap-modal">
-            <div class="treemap-modal-content">
-              <div class="treemap-modal-header">
-                <h2>🗺️ 상승률 TOP 20 트리맵</h2>
-                <span class="treemap-modal-close" onclick="closeTreemapModal()">&times;</span>
-              </div>
-              <div class="treemap-modal-body">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-                  <button id="tmBtnAll" class="tm-filter-btn tm-active" onclick="setTreemapFilter('all')">전체</button>
-                  <button id="tmBtn84"  class="tm-filter-btn" onclick="setTreemapFilter('84')">84㎡</button>
-                  <button id="tmBtn59"  class="tm-filter-btn" onclick="setTreemapFilter('59')">59㎡</button>
-                  <span id="treemapSubtitle" style="color:#9ca3af;font-size:12px;margin-left:4px;">
-                    직전 최고가 대비 상승률 상위 20개 단지 · 블록 크기 = 상승률 비례
-                  </span>
-                </div>
-                <div id="treemapContainer"></div>
-                <div class="treemap-tooltip" id="treemapTooltip"></div>
               </div>
             </div>
           </div>
@@ -1776,7 +1462,7 @@
         })();
 
         // 신고가 분위 그래프 관련 함수
-        const aptData = [{"name": "해운대 I PARK", "price": 100000, "date": "2026-03-08", "old_price": 98000, "rise_rate": 2.0, "floor": "51", "area": "83", "sido": "부산광역시", "sigungu": "해운대구", "location_dong": "우동", "build_year": "2011"}, {"name": "부산에코델타시티 대방 엘리움 리버뷰", "price": 94674, "date": "2026-03-10", "old_price": 81719, "rise_rate": 15.9, "floor": "7", "area": "119", "sido": "부산광역시", "sigungu": "강서구(부산)", "location_dong": "대저2동", "build_year": "분양"}, {"name": "양정 롯데캐슬 프론티엘", "price": 69720, "date": "2026-02-21", "old_price": 68600, "rise_rate": 1.6, "floor": "13", "area": "59", "sido": "부산광역시", "sigungu": "부산진구", "location_dong": "양정동", "build_year": "분양"}, {"name": "쌍용더플래티넘거제아시아드", "price": 68000, "date": "2026-03-14", "old_price": 67500, "rise_rate": 0.7, "floor": "19", "area": "59", "sido": "부산광역시", "sigungu": "연제구", "location_dong": "거제동", "build_year": "2023"}, {"name": "e편한세상시민공원1단지", "price": 65500, "date": "2026-03-14", "old_price": 65000, "rise_rate": 0.8, "floor": "32", "area": "59", "sido": "부산광역시", "sigungu": "부산진구", "location_dong": "전포동", "build_year": "2023"}, {"name": "금양해바라기1", "price": 65000, "date": "2026-03-09", "old_price": 53500, "rise_rate": 21.5, "floor": "3", "area": "116", "sido": "부산광역시", "sigungu": "동래구", "location_dong": "수안동", "build_year": "1979"}, {"name": "서면아이파크2단지", "price": 59800, "date": "2026-03-14", "old_price": 58000, "rise_rate": 3.1, "floor": "26", "area": "59", "sido": "부산광역시", "sigungu": "부산진구", "location_dong": "전포동", "build_year": "2021"}, {"name": "화명2차현대", "price": 46000, "date": "2026-03-14", "old_price": 45600, "rise_rate": 0.9, "floor": "14", "area": "119", "sido": "부산광역시", "sigungu": "북구(부산)", "location_dong": "화명동", "build_year": "2001"}, {"name": "코오롱하늘채2차", "price": 45900, "date": "2026-03-14", "old_price": 45100, "rise_rate": 1.8, "floor": "22", "area": "59", "sido": "부산광역시", "sigungu": "북구(부산)", "location_dong": "화명동", "build_year": "2002"}, {"name": "새동래1(가~라동)", "price": 36000, "date": "2026-03-13", "old_price": 34900, "rise_rate": 3.2, "floor": "8", "area": "63", "sido": "부산광역시", "sigungu": "동래구", "location_dong": "수안동", "build_year": "1979"}, {"name": "신우피렌체", "price": 29400, "date": "2026-03-14", "old_price": 27000, "rise_rate": 8.9, "floor": "7", "area": "76", "sido": "부산광역시", "sigungu": "연제구", "location_dong": "연산동", "build_year": "2012"}, {"name": "천아하늘정원", "price": 26000, "date": "2026-03-15", "old_price": 24500, "rise_rate": 6.1, "floor": "8", "area": "83", "sido": "부산광역시", "sigungu": "사하구", "location_dong": "괴정동", "build_year": "2005"}, {"name": "해오름2차", "price": 20500, "date": "2026-02-19", "old_price": 19700, "rise_rate": 4.1, "floor": "10", "area": "70", "sido": "부산광역시", "sigungu": "부산진구", "location_dong": "부전동", "build_year": "2004"}];
+        const aptData = [{"name": "남천금호어울림더비치", "price": 123000, "date": "2026-03-07", "old_price": 110000, "floor": "14", "area": "84", "sido": "부산광역시", "sigungu": "수영구", "location_dong": "남천동", "build_year": "2019"}, {"name": "레이카운티(4단지)", "price": 68200, "date": "2026-02-21", "old_price": 66500, "floor": "24", "area": "59", "sido": "부산광역시", "sigungu": "연제구", "location_dong": "거제동", "build_year": "2024"}, {"name": "시청역더리체", "price": 34500, "date": "2026-02-26", "old_price": 34000, "floor": "15", "area": "82", "sido": "부산광역시", "sigungu": "연제구", "location_dong": "연산동", "build_year": "2018"}];
         let quintileChartInstance = null;
 
         function openQuintileModal() {
@@ -1820,14 +1506,14 @@
           aptData.forEach(apt => {
             const price = apt.price;
             for (let i = 0; i < brackets.length - 1; i++) {
-              // 첫 구간은 0 포함(>=), 이후 구간은 하한 초과(>) · 상한 이하(<=)
-              const inRange = i === 0
-                ? (price >= brackets[0] && price <= brackets[1])
-                : (price > brackets[i] && price <= brackets[i + 1]);
-              if (inRange) {
+              if (price >= brackets[i] && price < brackets[i + 1]) {
                 counts[i]++;
                 break;
               }
+            }
+            // 정확히 최대값인 경우 마지막 구간에 포함
+            if (price === maxPrice && price === brackets[brackets.length - 1]) {
+              counts[counts.length - 1]++;
             }
           });
 
@@ -1958,11 +1644,9 @@
 
         // 특정 가격대의 아파트 목록 표시
         function showAptListForBracket(bracketStart, bracketEnd, label) {
-          // 해당 가격대의 아파트 필터링 (하한 초과 ~ 상한 이하, 첫 구간은 0 포함)
+          // 해당 가격대의 아파트 필터링
           const filteredApts = aptData.filter(apt => {
-            return bracketStart === 0
-              ? (apt.price >= bracketStart && apt.price <= bracketEnd)
-              : (apt.price > bracketStart && apt.price <= bracketEnd);
+            return apt.price >= bracketStart && apt.price < bracketEnd;
           });
 
           // 가격 높은 순으로 정렬
@@ -2019,197 +1703,11 @@
           document.getElementById('aptListModal').style.display = 'none';
         }
 
-        // ── 트리맵 상승률 보기 ──
-        let currentTreemapFilter = 'all';
-
-        function openTreemapModal() {
-          document.getElementById('treemapModal').style.display = 'block';
-          currentTreemapFilter = 'all';
-          renderTreemap();
-        }
-        function closeTreemapModal() {
-          document.getElementById('treemapModal').style.display = 'none';
-        }
-
-        function setTreemapFilter(type) {
-          currentTreemapFilter = type;
-          ['all','84','59'].forEach(t => {
-            const btn = document.getElementById('tmBtn' + (t==='all'?'All':t));
-            if (btn) btn.classList.toggle('tm-active', t === type);
-          });
-          const label = type === 'all' ? '전체' : type + '㎡ 타입';
-          const sub = document.getElementById('treemapSubtitle');
-          if (sub) sub.textContent = label + ' · 직전 최고가 대비 상승률 상위 20개 단지';
-          renderTreemap();
-        }
-
-        function renderTreemap() {
-          const container = document.getElementById('treemapContainer');
-          container.innerHTML = '';
-          const tooltip = document.getElementById('treemapTooltip');
-
-          // 평형 필터 (±3㎡ 허용)
-          function matchArea(a, target) {
-            const v = parseFloat(a.area);
-            return !isNaN(v) && Math.abs(v - target) <= 3;
-          }
-
-          let pool = aptData.filter(a => a.rise_rate > 0);
-          if (currentTreemapFilter === '84') pool = pool.filter(a => matchArea(a, 84));
-          else if (currentTreemapFilter === '59') pool = pool.filter(a => matchArea(a, 59));
-
-          // 상승률 > 0인 항목 정렬 후 top20
-          const sorted = pool
-            .sort((a, b) => b.rise_rate - a.rise_rate)
-            .slice(0, 20);
-
-          if (sorted.length === 0) {
-            container.innerHTML = '<p style="color:#9ca3af;text-align:center;padding:60px;">상승 데이터가 없습니다.</p>';
-            return;
-          }
-
-          const W = container.offsetWidth;
-          const H = container.offsetHeight;
-          const total = sorted.reduce((s, a) => s + a.rise_rate, 0);
-          const items = sorted.map(a => ({ ...a, value: a.rise_rate }));
-
-          // 스쿼리파이드 트리맵
-          function squarify(items, x, y, w, h) {
-            if (!items.length) return [];
-            const rects = [];
-            let rem = [...items];
-            let cx = x, cy = y, cw = w, ch = h;
-            const tot = items.reduce((s,i) => s+i.value, 0);
-
-            while (rem.length > 0) {
-              const remTot = rem.reduce((s,i) => s+i.value, 0);
-              let row = [], rowVal = 0, bestRatio = Infinity;
-
-              for (let i = 0; i < rem.length; i++) {
-                row.push(rem[i]); rowVal += rem[i].value;
-                const short = Math.min(cw, ch);
-                const long  = Math.max(cw, ch);
-                const rowArea = (rowVal / remTot) * (cw * ch);
-                const rowShort = rowArea / long;
-                let maxR = 0;
-                for (const it of row) {
-                  const itArea = (it.value / rowVal) * rowArea;
-                  const itOther = itArea / rowShort;
-                  maxR = Math.max(maxR, Math.max(rowShort/itOther, itOther/rowShort));
-                }
-                if (maxR > bestRatio) { row.pop(); rowVal -= rem[i].value; break; }
-                bestRatio = maxR;
-              }
-              if (!row.length) { row = [rem[0]]; rowVal = rem[0].value; }
-
-              const rowFrac = rowVal / remTot;
-              if (cw <= ch) {
-                const rowH = ch * rowFrac;
-                let rx = cx;
-                for (const it of row) {
-                  const itW = cw * (it.value / rowVal);
-                  rects.push({ x:rx, y:cy, w:itW, h:rowH, item:it });
-                  rx += itW;
-                }
-                cy += rowH; ch -= rowH;
-              } else {
-                const rowW = cw * rowFrac;
-                let ry = cy;
-                for (const it of row) {
-                  const itH = ch * (it.value / rowVal);
-                  rects.push({ x:cx, y:ry, w:rowW, h:itH, item:it });
-                  ry += itH;
-                }
-                cx += rowW; cw -= rowW;
-              }
-              rem = rem.slice(row.length);
-            }
-            return rects;
-          }
-
-          // 상승률에 따른 색상 (낮=연한빨강, 높=진한빨강)
-          const maxRate = sorted[0].rise_rate;
-          function rateColor(rate) {
-            const t = Math.min(rate / maxRate, 1);
-            const hue = 6;
-            const sat = 70 + t * 25;
-            const lgt = 48 - t * 20;
-            return `hsl(${hue},${sat}%,${lgt}%)`;
-          }
-
-          const rects = squarify(items, 0, 0, W, H);
-
-          rects.forEach((r, idx) => {
-            const it = r.item;
-            const block = document.createElement('div');
-            block.className = 'treemap-block';
-            block.style.left   = r.x + 'px';
-            block.style.top    = r.y + 'px';
-            block.style.width  = Math.max(r.w - 2, 1) + 'px';
-            block.style.height = Math.max(r.h - 2, 1) + 'px';
-            block.style.background = rateColor(it.rise_rate);
-
-            // 구+동 표기
-            const sigungu = it.sigungu.replace(/\(.*?\)/g, '').trim();
-            const regionLabel = (sigungu + ' ' + (it.location_dong || '')).trim();
-
-            // 상승률 비례 글씨 크기 (최대/최소 비율 기준)
-            const rateRatio = it.rise_rate / maxRate;
-            const minDim = Math.min(r.w, r.h);
-            const baseFont = minDim * (0.10 + rateRatio * 0.08);
-            const regionFs = Math.max(8,  Math.min(12, baseFont * 0.70));
-            const nameFs   = Math.max(9,  Math.min(16, baseFont * 0.90));
-            const rateFs   = Math.max(11, Math.min(22, baseFont * 1.15));
-            const absFs    = Math.max(8,  Math.min(13, baseFont * 0.75));
-            const inc = it.price - it.old_price;
-            const incStr = inc >= 10000
-              ? `+${(inc/10000).toFixed(1)}억`
-              : `+${inc.toLocaleString()}만`;
-            if (minDim > 50) {
-              block.innerHTML = `
-                <div class="treemap-region" style="font-size:${regionFs}px">${regionLabel}</div>
-                <div class="treemap-name"   style="font-size:${nameFs}px">${it.name}</div>
-                <div class="treemap-rate"   style="font-size:${rateFs}px">+${it.rise_rate}%</div>
-                <div style="font-size:${absFs}px;color:rgba(255,255,255,0.85);font-weight:600;">${incStr}</div>
-              `;
-            } else if (minDim > 28) {
-              block.innerHTML = `
-                <div class="treemap-name" style="font-size:${Math.max(8,nameFs*0.8)}px;color:#fff;font-weight:700;text-align:center;padding:2px;">${it.name}</div>
-                <div style="font-size:${Math.max(9,rateFs*0.8)}px;color:#fff;font-weight:800;">+${it.rise_rate}%</div>
-              `;
-            }
-
-            // 툴팁
-            block.addEventListener('mouseenter', e => {
-              tooltip.style.display = 'block';
-              const sigunguFull = it.sigungu.replace(/\(.*?\)/g, '').trim();
-              tooltip.innerHTML = `
-                <div style="font-weight:700;font-size:14px;margin-bottom:4px;">${it.name}</div>
-                <div style="color:#9ca3af;">${sigunguFull} ${it.location_dong}</div>
-                <div style="margin-top:6px;">신고가: <b>${it.price.toLocaleString()}만원</b></div>
-                <div>직전 최고가: ${it.old_price.toLocaleString()}만원</div>
-                <div style="color:#4ade80;font-weight:700;font-size:15px;margin-top:4px;">▲ +${it.rise_rate}% 상승</div>
-                <div style="color:#9ca3af;font-size:12px;">${it.date} | ${it.floor}층 | ${it.area}㎡</div>
-              `;
-            });
-            block.addEventListener('mousemove', e => {
-              tooltip.style.left = (e.clientX + 14) + 'px';
-              tooltip.style.top  = (e.clientY - 10) + 'px';
-            });
-            block.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
-
-            container.appendChild(block);
-          });
-        }
-
         // 그래프 버튼 클릭 이벤트
         document.getElementById('chip-quintile-graph').addEventListener('click', openQuintileModal);
 
         // 비교단지 묶기 버튼 클릭 이벤트
         document.getElementById('chip-compare').addEventListener('click', openCompareModal);
-
-        // 트리맵 버튼 클릭 이벤트
-        document.getElementById('chip-treemap').addEventListener('click', openTreemapModal);
 
         // 모달 배경 클릭 시 닫기
         window.onclick = function(event) {
@@ -2224,10 +1722,6 @@
           }
           if (event.target === compareModal) {
             closeCompareModal();
-          }
-          const treemapModal = document.getElementById('treemapModal');
-          if (event.target === treemapModal) {
-            closeTreemapModal();
           }
         };
 
