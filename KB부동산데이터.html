@@ -133,6 +133,38 @@ header.main-header{
   text-align:center;padding:48px;color:var(--muted);font-size:15px;
 }
 
+/* ── 탭1 지역 선택 컨트롤 ── */
+.py-ctrl-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px;}
+.py-ctrl-left{display:flex;gap:8px;flex-wrap:wrap;}
+.py-preset-btn{
+  padding:6px 14px;border-radius:20px;border:1px solid var(--border);
+  background:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;
+  transition:all .18s;
+}
+.py-preset-btn:hover,.py-preset-btn.active{
+  background:var(--accent);border-color:var(--accent);color:#fff;
+}
+.py-search-input{
+  padding:7px 14px;border-radius:10px;border:1px solid var(--border);
+  background:var(--card);color:var(--text);font-size:13px;outline:none;width:200px;
+}
+.py-search-input:focus{border-color:var(--accent);}
+.py-chip-area{
+  display:flex;flex-wrap:wrap;gap:7px;
+  max-height:140px;overflow-y:auto;padding:4px 0;
+}
+.py-chip{
+  padding:5px 13px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;
+  border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--muted);
+  transition:all .15s;user-select:none;
+}
+.py-chip:hover{border-color:rgba(76,175,80,.5);color:var(--text);}
+.py-chip.selected{
+  background:linear-gradient(135deg,rgba(76,175,80,.25),rgba(76,175,80,.1));
+  border-color:var(--accent);color:var(--accent);
+}
+.py-chip.hidden{display:none;}
+
 /* 차트 모달 (KB 연간 차트) */
 .chart-modal-overlay{
   display:none;position:fixed;inset:0;
@@ -169,7 +201,7 @@ header.main-header{
     <a href="index.html" class="back-link">← 홈으로</a>
     <h1 class="main-title">🏦 KB부동산 데이터</h1>
     <div class="sub">KB 매매증감 2026-03-23 기준 | 거래 데이터 기반 지역별 통계</div>
-    <div class="created-date">📅 제작일: 2026-03-31 07:10</div>
+    <div class="created-date">📅 제작일: 2026-03-31 08:10</div>
   </div>
 </header>
 
@@ -282,10 +314,30 @@ header.main-header{
   <!-- ── 탭 패널 1: 지역별 평균평단가 ── -->
   <div class="tab-panel" id="panel1">
     <div class="chart-section">
-      <div class="chart-wrap">
-        <div class="chart-wrap-title">💰 시군구별 평균 평단가 (만원/평) — 최근 6개월 실거래 기준</div>
-        <canvas id="pyChart" style="max-height:480px;"></canvas>
+
+      <!-- 지역 선택 컨트롤 -->
+      <div class="chart-wrap" style="padding-bottom:16px;">
+        <div class="chart-wrap-title" style="margin-bottom:14px;">💰 시군구별 평균 평단가 (만원/평) — 최근 6개월 실거래 기준</div>
+        <div class="py-ctrl-row">
+          <div class="py-ctrl-left">
+            <button class="py-preset-btn active" onclick="pyPreset('all')">전체</button>
+            <button class="py-preset-btn" onclick="pyPreset('top10')">TOP 10</button>
+            <button class="py-preset-btn" onclick="pyPreset('none')">전체 해제</button>
+          </div>
+          <div class="py-ctrl-right">
+            <input type="text" id="pySearch" placeholder="🔍 지역 검색..." class="py-search-input" oninput="pyFilterChips()" />
+          </div>
+        </div>
+        <div id="pyChipArea" class="py-chip-area"></div>
+        <div style="margin-top:6px;font-size:12px;color:var(--muted)">
+          <span id="pySelCount">0</span>개 선택됨 · 클릭하여 선택/해제
+        </div>
       </div>
+
+      <div class="chart-wrap">
+        <canvas id="pyChart" style="max-height:520px;"></canvas>
+      </div>
+
       <div class="table-section">
         <div class="table-header">
           <div class="table-title">📋 평단가 상세 테이블</div>
@@ -295,7 +347,7 @@ header.main-header{
             <tr>
               <th style="text-align:left">순위</th>
               <th style="text-align:left">시군구</th>
-              <th>평균 평단가(만원/평) ↕</th>
+              <th>평균 평단가(만원/평)</th>
               <th>거래 건수</th>
             </tr>
           </thead>
@@ -406,24 +458,102 @@ function sortTable(col) {
   renderTable(q?sorted.filter(function(r){return r.region.includes(q);}):sorted);
 }
 
-// ── 탭1: 평균 평단가 차트 ──
+// ── 탭1: 평균 평단가 차트 (지역 선택 비교) ──
 var pyChartInstance = null;
-function renderPyChart() {
-  if (!PY_STATS || PY_STATS.length === 0) {
-    document.getElementById('panel1').querySelector('.chart-wrap').innerHTML =
-      '<div class="no-data">📭 평단가 데이터가 없습니다.<br><small>거래 데이터 갱신 후 다시 생성해주세요.</small></div>';
+var pySelectedSet = new Set();
+var pyInitDone = false;
+
+function pyInitChips() {
+  if (!PY_STATS || PY_STATS.length === 0) return;
+  var area = document.getElementById('pyChipArea');
+  area.innerHTML = '';
+  PY_STATS.forEach(function(d, i) {
+    var chip = document.createElement('span');
+    chip.className = 'py-chip' + (pySelectedSet.has(d.sigungu) ? ' selected' : '');
+    chip.textContent = d.sigungu;
+    chip.dataset.name = d.sigungu;
+    chip.onclick = function() { pyToggleChip(d.sigungu, chip); };
+    area.appendChild(chip);
+  });
+  pyUpdateSelCount();
+}
+
+function pyToggleChip(name, chipEl) {
+  if (pySelectedSet.has(name)) {
+    pySelectedSet.delete(name);
+    chipEl.classList.remove('selected');
+  } else {
+    pySelectedSet.add(name);
+    chipEl.classList.add('selected');
+  }
+  pyUpdateSelCount();
+  pyDrawChart();
+}
+
+function pyPreset(type) {
+  document.querySelectorAll('.py-preset-btn').forEach(function(b){b.classList.remove('active');});
+  event.currentTarget.classList.add('active');
+  pySelectedSet.clear();
+  if (type === 'all') {
+    PY_STATS.forEach(function(d){ pySelectedSet.add(d.sigungu); });
+  } else if (type === 'top10') {
+    PY_STATS.slice(0, 10).forEach(function(d){ pySelectedSet.add(d.sigungu); });
+  }
+  // 'none' → 이미 clear됨
+  pyInitChips();
+  pyDrawChart();
+}
+
+function pyFilterChips() {
+  var q = document.getElementById('pySearch').value.trim().toLowerCase();
+  document.querySelectorAll('.py-chip').forEach(function(chip) {
+    chip.classList.toggle('hidden', q.length > 0 && chip.dataset.name.toLowerCase().indexOf(q) === -1);
+  });
+}
+
+function pyUpdateSelCount() {
+  document.getElementById('pySelCount').textContent = pySelectedSet.size;
+}
+
+function pyDrawChart() {
+  var filtered = PY_STATS.filter(function(d){ return pySelectedSet.has(d.sigungu); });
+  // 테이블: 전체 순위 기준, 선택된 것만 표시
+  document.getElementById('pyTableBody').innerHTML = PY_STATS.map(function(d, i) {
+    if (!pySelectedSet.has(d.sigungu)) return '';
+    return '<tr><td>'+(i+1)+'</td><td>'+d.sigungu+'</td>'
+      +'<td><strong>'+Math.round(d.avg).toLocaleString()+'</strong></td>'
+      +'<td>'+d.count+'건</td></tr>';
+  }).join('');
+
+  if (filtered.length === 0) {
+    if (pyChartInstance) { pyChartInstance.destroy(); pyChartInstance = null; }
+    document.getElementById('pyChart').style.display = 'none';
     return;
   }
-  var labels = PY_STATS.map(function(d){return d.sigungu;});
-  var values = PY_STATS.map(function(d){return d.avg;});
+  document.getElementById('pyChart').style.display = '';
+
+  var labels = filtered.map(function(d){return d.sigungu;});
+  var values = filtered.map(function(d){return d.avg;});
   var maxVal = Math.max.apply(null, values);
-  var colors = values.map(function(v){
-    var ratio = v / maxVal;
-    if (ratio >= 0.8) return 'rgba(244,67,54,0.8)';
-    if (ratio >= 0.6) return 'rgba(255,152,0,0.8)';
-    if (ratio >= 0.4) return 'rgba(76,175,80,0.8)';
-    return 'rgba(33,150,243,0.7)';
+  var bgColors = values.map(function(v){
+    var r = v / maxVal;
+    if (r >= 0.85) return 'rgba(244,67,54,0.85)';
+    if (r >= 0.70) return 'rgba(255,152,0,0.85)';
+    if (r >= 0.50) return 'rgba(76,175,80,0.80)';
+    return 'rgba(33,150,243,0.75)';
   });
+  var bdColors = values.map(function(v){
+    var r = v / maxVal;
+    if (r >= 0.85) return '#f44336';
+    if (r >= 0.70) return '#ff9800';
+    if (r >= 0.50) return '#4caf50';
+    return '#2196f3';
+  });
+
+  var canvasH = Math.max(340, Math.min(filtered.length * 34 + 80, 680));
+  document.getElementById('pyChart').style.height = canvasH + 'px';
+  document.getElementById('pyChart').style.maxHeight = 'none';
+
   if (pyChartInstance) { pyChartInstance.destroy(); pyChartInstance = null; }
   pyChartInstance = new Chart(document.getElementById('pyChart').getContext('2d'), {
     type: 'bar',
@@ -432,36 +562,65 @@ function renderPyChart() {
       datasets: [{
         label: '평균 평단가(만원/평)',
         data: values,
-        backgroundColor: colors,
-        borderRadius: 4,
-        borderWidth: 0
+        backgroundColor: bgColors,
+        borderColor: bdColors,
+        borderWidth: 2,
+        borderRadius: 6,
+        borderSkipped: false,
       }]
     },
     options: {
       indexAxis: 'y',
       responsive: true,
-      animation: {duration: 400},
+      maintainAspectRatio: false,
+      animation: {duration: 350, easing: 'easeOutQuart'},
       plugins: {
         legend: {display: false},
-        tooltip: {callbacks: {
-          label: function(c) { return ' ' + Math.round(c.parsed.x).toLocaleString() + ' 만원/평'; }
-        }}
+        tooltip: {
+          backgroundColor: 'rgba(21,24,34,0.95)',
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          titleColor: '#e8eaf0',
+          bodyColor: '#96a0b5',
+          padding: 12,
+          callbacks: {
+            label: function(c) {
+              return '  ' + Math.round(c.parsed.x).toLocaleString() + ' 만원/평';
+            }
+          }
+        }
       },
       scales: {
         x: {
-          ticks: {color:'rgba(255,255,255,0.6)', callback: function(v){return v.toLocaleString();}},
-          grid: {color:'rgba(255,255,255,0.07)'}
+          title: {display: true, text: '만원/평', color: 'rgba(150,160,181,0.7)', font:{size:11}},
+          ticks: {color:'rgba(150,160,181,0.9)', callback: function(v){return v.toLocaleString();}},
+          grid: {color:'rgba(255,255,255,0.06)'},
+          border: {color:'rgba(255,255,255,0.08)'}
         },
-        y: {ticks: {color:'rgba(255,255,255,0.85)', font:{size:12}}, grid: {display:false}}
+        y: {
+          title: {display: true, text: '지역', color: 'rgba(150,160,181,0.7)', font:{size:11}},
+          ticks: {color:'rgba(255,255,255,0.85)', font:{size:12}},
+          grid: {display: false},
+          border: {color:'rgba(255,255,255,0.08)'}
+        }
       }
     }
   });
-  // 테이블
-  document.getElementById('pyTableBody').innerHTML = PY_STATS.map(function(d, i) {
-    return '<tr><td>'+(i+1)+'</td><td>'+d.sigungu+'</td>'
-      +'<td><strong>'+Math.round(d.avg).toLocaleString()+'</strong></td>'
-      +'<td>'+d.count+'건</td></tr>';
-  }).join('');
+}
+
+function renderPyChart() {
+  if (!PY_STATS || PY_STATS.length === 0) {
+    document.getElementById('panel1').innerHTML =
+      '<div class="no-data">📭 평단가 데이터가 없습니다.<br><small>거래 데이터 갱신 후 다시 생성해주세요.</small></div>';
+    return;
+  }
+  if (!pyInitDone) {
+    pyInitDone = true;
+    // 초기: TOP10 선택
+    PY_STATS.slice(0, 10).forEach(function(d){ pySelectedSet.add(d.sigungu); });
+  }
+  pyInitChips();
+  pyDrawChart();
 }
 
 // ── 탭2: 분위가격 차트 ──
