@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>KB 월간 ㎡당 아파트 평균매매가</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<style>
+:root{
+  --bg:#0b0c10; --card:#151822; --text:#e8eaf0; --muted:#96a0b5;
+  --accent:#4caf50; --border:rgba(255,255,255,.08);
+  --red:#f44336; --orange:#ff9800; --blue:#2196f3;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:ui-sans-serif,system-ui,-apple-system,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",Arial,sans-serif;
+  background:linear-gradient(180deg,#0b0c10 0%,#0f1220 100%);
+  color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;
+}
+header{
+  position:sticky;top:0;z-index:10;
+  backdrop-filter:saturate(150%) blur(8px);
+  background:rgba(11,12,16,.65);
+  border-bottom:1px solid var(--border);
+  padding:14px 20px;
+}
+.header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.header-left h1{font-size:clamp(18px,3vw,24px);font-weight:800;}
+.header-left .sub{font-size:12px;color:var(--muted);margin-top:3px;}
+.badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;
+  background:linear-gradient(135deg,var(--accent),#38a169);color:#fff;
+}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px 48px;}
+
+/* 요약 카드 */
+.summary-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:28px;}
+.sum-card{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:16px 20px;display:flex;flex-direction:column;align-items:flex-start;gap:4px;
+  min-width:160px;flex:1;
+  transition:transform .2s,box-shadow .2s;
+}
+.sum-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(76,175,80,.15);border-color:rgba(76,175,80,.4);}
+.sum-avg{border-color:rgba(33,150,243,.3);}
+.sum-medal{font-size:22px;}
+.sum-name{font-size:13px;color:var(--muted);font-weight:600;}
+.sum-val{font-size:22px;font-weight:800;color:var(--text);}
+.sum-unit{font-size:11px;color:var(--muted);}
+
+/* 차트 카드 */
+.chart-card{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:24px;margin-bottom:28px;
+}
+.chart-card-header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px;}
+.chart-card-title{font-size:18px;font-weight:800;}
+.chart-card-sub{font-size:12px;color:var(--muted);margin-top:4px;}
+.mode-badge{
+  padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;
+  background:rgba(76,175,80,.18);color:var(--accent);border:1px solid rgba(76,175,80,.3);
+}
+.chart-wrap{position:relative;width:100%;height:480px;}
+
+/* 범례 (다중 데이터셋) */
+.legend-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
+.legend-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
+
+/* 테이블 */
+.table-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;overflow-x:auto;}
+.table-card-title{font-size:16px;font-weight:800;margin-bottom:16px;}
+.data-table{width:100%;border-collapse:collapse;font-size:13px;}
+.data-table th{
+  background:#1a1d28;color:var(--muted);font-weight:600;
+  padding:10px 14px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap;
+}
+.data-table th:first-child{text-align:left;}
+.data-table td{padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.04);text-align:right;}
+.data-table td:first-child{text-align:left;font-weight:600;}
+.data-table tr:hover td{background:rgba(255,255,255,.03);}
+.val-top{color:#f44336;font-weight:700;}
+.val-mid{color:#ff9800;font-weight:600;}
+
+footer{
+  text-align:center;padding:20px;color:var(--muted);font-size:12px;
+  border-top:1px solid var(--border);margin-top:16px;
+}
+@media(max-width:600px){
+  .summary-row{flex-direction:column;}
+  .sum-card{min-width:0;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-left">
+      <h1>📊 KB 월간 ㎡당 아파트 평균매매가</h1>
+      <div class="sub">KB 월간 데이터 · ㎡당 아파트 평균매매가 · 2026-03-31 20:05 생성</div>
+    </div>
+    <div class="badge">📈 지역 비교</div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="summary-row">
+                  <div class="sum-card">
+                      <span class="sum-medal">🥇</span>
+                      <span class="sum-name">강남구</span>
+                      <span class="sum-val">12,401</span>
+                      <span class="sum-unit">만원/평</span>
+                    </div><div class="sum-card">
+                      <span class="sum-medal">🥈</span>
+                      <span class="sum-name">서초구</span>
+                      <span class="sum-val">11,424</span>
+                      <span class="sum-unit">만원/평</span>
+                    </div><div class="sum-card">
+                      <span class="sum-medal">🥉</span>
+                      <span class="sum-name">송파구</span>
+                      <span class="sum-val">9,239</span>
+                      <span class="sum-unit">만원/평</span>
+                    </div>
+                  <div class="sum-card sum-avg">
+                    <span class="sum-medal">📊</span>
+                    <span class="sum-name">평균</span>
+                    <span class="sum-val">5,699</span>
+                    <span class="sum-unit">만원/평</span>
+                  </div>
+                </div>
+
+  <div class="chart-card">
+    <div class="chart-card-header">
+      <div>
+        <div class="chart-card-title">지역별 평당 아파트 평균매매가</div>
+        <div class="chart-card-sub">2026년 03월 · 단위: 만원/평 (㎡ × 3.3 환산)</div>
+      </div>
+      <div class="mode-badge">지역 비교</div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="mainChart"></canvas>
+    </div>
+    
+  </div>
+
+  <div class="table-card">
+    <div class="table-card-title">📋 상세 수치</div>
+    <table class="data-table" id="dataTable">
+      <thead id="tableHead"></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<footer>부태리의 실거래가 모니터 · KB 월간 데이터 차트 · 2026-03-31 20:05</footer>
+
+<script>
+Chart.register(ChartDataLabels);
+
+const labels   = ["강남구", "서초구", "송파구", "용산구", "성동구", "강남11개구", "마포구", "광진구", "양천구", "강동구", "분당구", "서울특별시", "동작구", "영등포구", "중구", "성남시", "종로구", "수정구", "서대문구", "강북14개구", "동대문구", "강서구", "성북구", "관악구", "은평구", "중원구", "구로구", "노원구", "중랑구", "강북구", "금천구", "도봉구"];
+const datasets = [{"label": "2026년 03월", "data": [12401.0, 11424.0, 9239.0, 8752.0, 7613.0, 7421.0, 7033.0, 6753.0, 6746.0, 6465.0, 6304.0, 6127.0, 6028.0, 5887.0, 5771.0, 5661.0, 5268.0, 5089.0, 4788.0, 4683.0, 4475.0, 4420.0, 3977.0, 3894.0, 3847.0, 3765.0, 3432.0, 3387.0, 3055.0, 2974.0, 2948.0, 2749.0], "backgroundColor": ["rgba(244,67,54,0.82)", "rgba(244,67,54,0.82)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)", "rgba(76,175,80,0.72)"], "borderColor": ["#f44336", "#f44336", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50", "#4caf50"], "borderWidth": 2, "borderRadius": 8, "borderSkipped": false}];
+const isMulti  = false;
+
+const ctx = document.getElementById('mainChart').getContext('2d');
+const chart = new Chart(ctx, {
+  type: 'bar',
+  data: { labels, datasets },
+  options: {
+    indexAxis: 'x',
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 600, easing: 'easeOutQuart' },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: 'rgba(21,24,34,0.95)',
+        borderColor: 'rgba(255,255,255,0.12)',
+        borderWidth: 1,
+        titleColor: '#e8eaf0',
+        bodyColor: '#96a0b5',
+        padding: 12,
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()} 만원/평`
+        }
+      },
+      datalabels: {
+        display: !isMulti,
+        color: 'rgba(232,234,240,0.8)',
+        anchor: 'end',
+        align: 'top',
+        offset: 4,
+        font: { size: 10, weight: '600' },
+        formatter: v => v >= 1000 ? (v/1000).toFixed(1)+'k' : v.toLocaleString(),
+      }
+    },
+    scales: {
+      x: {
+        title: { display: true, text: '지역', color: 'rgba(150,160,181,0.7)', font: { size: 11 } },
+        grid: { color: 'rgba(255,255,255,0.06)' },
+        ticks: {
+          color: 'rgba(150,160,181,0.9)',
+          maxRotation: 45,
+          font: { size: 10 },
+        },
+        border: { color: 'rgba(255,255,255,0.08)' }
+      },
+      y: {
+        title: { display: true, text: '만원/평', color: 'rgba(150,160,181,0.7)', font: { size: 11 } },
+        grid: { color: 'rgba(255,255,255,0.06)' },
+        ticks: {
+          color: 'rgba(150,160,181,0.9)',
+          callback: v => v.toLocaleString()
+        },
+        border: { color: 'rgba(255,255,255,0.08)' }
+      }
+    },
+    barPercentage: isMulti ? 0.75 : 0.65,
+    categoryPercentage: isMulti ? 0.85 : 0.7,
+  }
+});
+
+// 커스텀 범례
+if (isMulti) {
+  const row = document.getElementById('legendRow');
+  if (row) {
+    datasets.forEach(ds => {
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+      item.innerHTML = `<div class="legend-dot" style="background:${ds.borderColor}"></div>${ds.label}`;
+      row.appendChild(item);
+    });
+  }
+}
+
+// 테이블 렌더링
+(function() {
+  const thead = document.getElementById('tableHead');
+  const tbody = document.getElementById('tableBody');
+  let thHtml = '<tr><th>지역</th>';
+  datasets.forEach(ds => thHtml += `<th>${ds.label}</th>`);
+  thHtml += '</tr>';
+  thead.innerHTML = thHtml;
+
+  const allVals = datasets.flatMap(ds => ds.data);
+  const maxV = Math.max(...allVals);
+
+  labels.forEach((lbl, i) => {
+    let tr = `<tr><td>${lbl}</td>`;
+    datasets.forEach(ds => {
+      const v = ds.data[i];
+      let cls = v >= maxV * 0.9 ? 'val-top' : (v >= maxV * 0.75 ? 'val-mid' : '');
+      tr += `<td class="${cls}">${v.toLocaleString()}</td>`;
+    });
+    tr += '</tr>';
+    tbody.innerHTML += tr;
+  });
+})();
+</script>
+</body>
+</html>

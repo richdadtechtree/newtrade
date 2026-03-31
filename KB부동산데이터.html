@@ -200,8 +200,8 @@ header.main-header{
   <div class="wrap">
     <a href="index.html" class="back-link">← 홈으로</a>
     <h1 class="main-title">🏦 KB부동산 데이터</h1>
-    <div class="sub">KB 거래 데이터 기반 지역별 통계 | 2026-03-31 18:51</div>
-    <div class="created-date">📅 제작일: 2026-03-31 18:51</div>
+    <div class="sub">KB 거래 데이터 기반 지역별 통계 | 2026-03-31 20:04</div>
+    <div class="created-date">📅 제작일: 2026-03-31 20:04</div>
   </div>
 </header>
 
@@ -209,11 +209,14 @@ header.main-header{
 
   <!-- ── 상단 탭 카드 3개 ── -->
   <div class="tab-cards">
-    <div class="tab-card active" id="tabCard0" onclick="switchTab(0)">
-      <span class="tab-card-icon">💰</span>
-      <div class="tab-card-title">지역별 평균평단가 비교</div>
-      <div class="tab-card-desc">KB 월간 데이터 기반<br>클릭하면 최신 차트 페이지로 이동</div>
-    </div>
+    <a id="tabCard0Link" href="kb_monthly_chart_20260331_195734.html" style="text-decoration:none;">
+      <div class="tab-card active" id="tabCard0">
+        <span class="tab-card-icon">💰</span>
+        <div class="tab-card-title">지역별 평균평단가 비교</div>
+        <div class="tab-card-desc">KB 월간 데이터 기반<br>클릭하면 최신 차트 페이지로 이동</div>
+        <div id="tabCard0NoFile" style="display:none;font-size:11px;color:#f44336;margin-top:6px;">⚠ 차트 파일 없음</div>
+      </div>
+    </a>
     <div class="tab-card" id="tabCard1" onclick="switchTab(1)">
       <span class="tab-card-icon">📈</span>
       <div class="tab-card-title">지역별 분위가격 비교</div>
@@ -281,24 +284,32 @@ const KB_MONTHLY_REGIONS  = {"전국": [1070.0, 1070.0, 1068.0, 1067.0, 1065.0, 
 const KB_MONTHLY_DATES    = ["2013년 04월", "2013년 05월", "2013년 06월", "2013년 07월", "2013년 08월", "2013년 09월", "2013년 10월", "2013년 11월", "2013년 12월", "2014년 01월", "2014년 02월", "2014년 03월", "2014년 04월", "2014년 05월", "2014년 06월", "2014년 07월", "2014년 08월", "2014년 09월", "2014년 10월", "2014년 11월", "2014년 12월", "2015년 01월", "2015년 02월", "2015년 03월", "2015년 04월", "2015년 05월", "2015년 06월", "2015년 07월", "2015년 08월", "2015년 09월", "2015년 10월", "2015년 11월", "2015년 12월", "2016년 01월", "2016년 02월", "2016년 03월", "2016년 04월", "2016년 05월", "2016년 06월", "2016년 07월", "2016년 08월", "2016년 09월", "2016년 10월", "2016년 11월", "2016년 12월", "2017년 01월", "2017년 02월", "2017년 03월", "2017년 04월", "2017년 05월", "2017년 06월", "2017년 07월", "2017년 08월", "2017년 09월", "2017년 10월", "2017년 11월", "2017년 12월", "2018년 01월", "2018년 02월", "2018년 03월", "2018년 04월", "2018년 05월", "2018년 06월", "2018년 07월", "2018년 08월", "2018년 09월", "2018년 10월", "2018년 11월", "2018년 12월", "2019년 01월", "2019년 02월", "2019년 03월", "2019년 04월", "2019년 05월", "2019년 06월", "2019년 07월", "2019년 08월", "2019년 09월", "2019년 10월", "2019년 11월", "2019년 12월", "2020년 01월", "2020년 02월", "2020년 03월", "2020년 04월", "2020년 05월", "2020년 06월", "2020년 07월", "2020년 08월", "2020년 09월", "2020년 10월", "2020년 11월", "2020년 12월", "2021년 01월", "2021년 02월", "2021년 03월", "2021년 04월", "2021년 05월", "2021년 06월", "2021년 07월", "2021년 08월", "2021년 09월", "2021년 10월", "2021년 11월", "2021년 12월", "2022년 01월", "2022년 02월", "2022년 03월", "2022년 04월", "2022년 05월", "2022년 06월", "2022년 07월", "2022년 08월", "2022년 09월", "2022년 10월", "2022년 11월", "2022년 12월", "2023년 01월", "2023년 02월", "2023년 03월", "2023년 04월", "2023년 05월", "2023년 06월", "2023년 07월", "2023년 08월", "2023년 09월", "2023년 10월", "2023년 11월", "2023년 12월", "2024년 01월", "2024년 02월", "2024년 03월", "2024년 04월", "2024년 05월", "2024년 06월", "2024년 07월", "2024년 08월", "2024년 09월", "2024년 10월", "2024년 11월", "2024년 12월", "2025년 01월", "2025년 02월", "2025년 03월", "2025년 04월", "2025년 05월", "2025년 06월", "2025년 07월", "2025년 08월", "2025년 09월", "2025년 10월", "2025년 11월", "2025년 12월", "2026년 01월", "2026년 02월", "2026년 03월"];
 
 // ── KB 월간 차트 파일명 (Python에서 주입) ──
-const KB_MONTHLY_CHART_FILE = 'kb_monthly_chart_20260331_183417.html';
+const KB_MONTHLY_CHART_FILE = 'kb_monthly_chart_20260331_195734.html';
 
-// ── 탭 전환 ──
-function switchTab(idx) {
-  if (idx === 0) {
-    // 지역별 평균평단가 → 최신 kb_monthly_chart 파일로 이동
-    if (KB_MONTHLY_CHART_FILE) {
-      window.location.href = KB_MONTHLY_CHART_FILE;
-    } else {
+// ── 탭0 링크 초기화: 파일 없으면 클릭 막기 ──
+(function() {
+  var link = document.getElementById('tabCard0Link');
+  if (!link) return;
+  if (!KB_MONTHLY_CHART_FILE) {
+    link.removeAttribute('href');
+    link.style.cursor = 'default';
+    var noFile = document.getElementById('tabCard0NoFile');
+    if (noFile) noFile.style.display = 'block';
+    link.onclick = function(e) {
+      e.preventDefault();
       alert('KB 월간 차트 파일이 없습니다.\n📈 KB 월간 차트 버튼으로 먼저 생성해주세요.');
-    }
-    return;
+    };
   }
-  // idx=1 → 분위가격(panel0)
-  document.getElementById('tabCard0').classList.remove('active');
-  document.getElementById('tabCard1').classList.toggle('active', idx === 1);
-  document.getElementById('panel0').classList.toggle('active', idx === 1);
-  if (idx === 1) renderQtlChart();
+})();
+
+// ── 탭 전환 (탭1: 분위가격만) ──
+function switchTab(idx) {
+  if (idx === 1) {
+    document.getElementById('tabCard0').classList.remove('active');
+    document.getElementById('tabCard1').classList.add('active');
+    document.getElementById('panel0').classList.add('active');
+    renderQtlChart();
+  }
 }
 
 // ── 탭0: KB 매매증감 테이블 ──
