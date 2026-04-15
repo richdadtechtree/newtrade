@@ -3,7 +3,7 @@
         <head>
         <meta charset="utf-8"/>
         <meta content="width=device-width, initial-scale=1" name="viewport"/>
-        <title>전용면적 59㎡ (국평 18평형) 가격 순위 - 2026-04-13 07:57</title>
+        <title>전용면적 59㎡ (국평 18평형) 가격 순위 - 2026-04-16 03:36</title>
         <style>
           :root {
             --bg:#F2F2F7; --fg:#111; --sub:#6b7280; --card:#fff; --bd:#e5e7eb;
@@ -188,6 +188,69 @@
           }
 
           footer{ margin:24px 0 0; color:#6b7280; font-size:12px; text-align:center }
+
+          /* ── 구 멀티셀렉트 드롭다운 ── */
+          .gu-filter-bar{
+            max-width:960px; width:92vw; margin:12px auto 0;
+            display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+          }
+          .gu-dropdown-wrap{ position:relative; }
+          .gu-dropdown-btn{
+            display:inline-flex; align-items:center; gap:6px;
+            padding:10px 16px; border-radius:12px;
+            border:1px solid var(--bd); background:var(--card); color:var(--fg);
+            font-size:14px; font-family:inherit; cursor:pointer;
+            box-shadow:0 2px 8px rgba(0,0,0,.05); transition:all .2s;
+            white-space:nowrap;
+          }
+          .gu-dropdown-btn:hover{ border-color:var(--primary); }
+          .gu-dropdown-btn.has-selection{ border-color:var(--primary); color:var(--primary); font-weight:600; }
+          .gu-dropdown-arrow{ font-size:10px; transition:transform .2s; }
+          .gu-dropdown-arrow.open{ transform:rotate(180deg); }
+          .gu-dropdown-panel{
+            display:none; position:absolute; top:calc(100% + 6px); left:0; z-index:200;
+            background:var(--card); border:1px solid var(--bd); border-radius:12px;
+            box-shadow:0 8px 24px rgba(0,0,0,.12);
+            min-width:220px; max-height:320px; overflow-y:auto;
+            padding:8px 0;
+          }
+          .gu-dropdown-panel.open{ display:block; }
+          .gu-dropdown-header{
+            display:flex; justify-content:space-between; align-items:center;
+            padding:6px 14px 8px; border-bottom:1px solid var(--bd); margin-bottom:4px;
+          }
+          .gu-dropdown-header span{ font-size:12px; color:var(--sub); }
+          .gu-dropdown-header button{
+            font-size:12px; border:none; background:none; color:var(--primary);
+            cursor:pointer; font-weight:600; padding:0;
+          }
+          .gu-option{
+            display:flex; align-items:center; gap:8px;
+            padding:8px 14px; cursor:pointer; font-size:14px;
+            transition:background .15s;
+          }
+          .gu-option:hover{ background:#f3f4f6; }
+          .gu-option input[type=checkbox]{ accent-color:var(--primary); width:15px; height:15px; cursor:pointer; }
+          .gu-option label{ cursor:pointer; flex:1; }
+          .gu-selected-tags{
+            display:flex; flex-wrap:wrap; gap:6px; flex:1;
+          }
+          .gu-tag{
+            display:inline-flex; align-items:center; gap:4px;
+            padding:4px 10px; border-radius:999px; font-size:12px; font-weight:600;
+            background:var(--primary); color:#fff;
+          }
+          .gu-tag-remove{
+            border:none; background:none; color:#fff; font-size:13px;
+            cursor:pointer; line-height:1; padding:0; opacity:.8;
+          }
+          .gu-tag-remove:hover{ opacity:1; }
+          .gu-clear-btn{
+            padding:6px 12px; border-radius:8px; border:1px solid var(--bd);
+            background:none; color:var(--sub); font-size:12px; cursor:pointer;
+            white-space:nowrap; transition:all .15s;
+          }
+          .gu-clear-btn:hover{ border-color:var(--accent); color:var(--accent); }
         </style>
         </head>
         <body>
@@ -196,7 +259,7 @@
           <div class="page">
             <header class="header">
               <h1>🏆 전용면적 59㎡ (국평 18평형) 가격 순위</h1>
-              <p class="sub">2026-04-13 07:57 기준 · 상위 508위 (전체 508개 단지)</p>
+              <p class="sub">2026-04-16 03:36 기준 · 상위 508위 (전체 508개 단지)</p>
 
               <div class="price-filter">
                 <button class="price-btn active" data-range="all">전체</button>
@@ -206,6 +269,24 @@
                 <button class="price-btn" data-range="30s">30억대</button>
               </div>
             </header>
+
+            <!-- 구 멀티셀렉트 필터 -->
+            <div class="gu-filter-bar">
+              <div class="gu-dropdown-wrap">
+                <button class="gu-dropdown-btn" id="guDropdownBtn" onclick="toggleGuDropdown()">
+                  🏙️ 구 선택 <span class="gu-dropdown-arrow" id="guDropdownArrow">▼</span>
+                </button>
+                <div class="gu-dropdown-panel" id="guDropdownPanel">
+                  <div class="gu-dropdown-header">
+                    <span id="guOptionCount">0개</span>
+                    <button onclick="guSelectAll()">전체선택</button>
+                  </div>
+                  <div id="guOptionList"></div>
+                </div>
+              </div>
+              <div class="gu-selected-tags" id="guSelectedTags"></div>
+              <button class="gu-clear-btn" id="guClearBtn" style="display:none;" onclick="guClearAll()">전체 해제</button>
+            </div>
 
             <!-- 검색 바 -->
             <div class="search-bar">
@@ -376,7 +457,7 @@
           const dongStr = dong && dong !== '-' ? dong : '';
 
           return `
-            <div class="card" data-price-range="${priceRange}" data-kakao-query="${kakaoQuery}" onclick="openKakaoMap(this)" style="cursor:pointer;">
+            <div class="card" data-price-range="${priceRange}" data-sigungu="${sigunguRaw}" data-kakao-query="${kakaoQuery}" onclick="openKakaoMap(this)" style="cursor:pointer;">
               <div class="card-header">
                 <h3>🏆 ${rank}위 ${rankBadge} ${aptName} ${yearBadge} 전용면적 ${areaDisplay}</h3>
                 ${regulationBadges ? `<div class="regulation-badges">${regulationBadges}</div>` : ''}
@@ -410,6 +491,93 @@
         let currentRange = 'all';
         let searchQuery = '';
         let isRenderingComplete = false;
+        let selectedSigungus = new Set();  // 선택된 구 목록
+
+        // ── 구 드롭다운 ──
+        function buildSigunguDropdown() {
+          // 전체 sigungu 목록 수집 + 정렬
+          const all = [...new Set(sigungus.map(s => s))].sort((a,b) => a.localeCompare(b, 'ko'));
+          const list = document.getElementById('guOptionList');
+          const countEl = document.getElementById('guOptionCount');
+          if (!list) return;
+          list.innerHTML = '';
+          all.forEach(sg => {
+            const div = document.createElement('div');
+            div.className = 'gu-option';
+            const id = 'gu_' + sg.replace(/\s/g,'_');
+            div.innerHTML = `<input type="checkbox" id="${id}" value="${sg}">
+                             <label for="${id}">${sg}</label>`;
+            div.querySelector('input').addEventListener('change', e => {
+              if (e.target.checked) selectedSigungus.add(sg);
+              else selectedSigungus.delete(sg);
+              updateGuTags();
+              if (isRenderingComplete) applyFilters();
+            });
+            list.appendChild(div);
+          });
+          if (countEl) countEl.textContent = all.length + '개';
+        }
+
+        function toggleGuDropdown() {
+          const panel = document.getElementById('guDropdownPanel');
+          const arrow = document.getElementById('guDropdownArrow');
+          const isOpen = panel.classList.toggle('open');
+          arrow.classList.toggle('open', isOpen);
+          if (isOpen) {
+            // 드롭다운 외부 클릭 시 닫기
+            setTimeout(() => document.addEventListener('click', closeGuOnOutside), 0);
+          }
+        }
+
+        function closeGuOnOutside(e) {
+          const wrap = document.querySelector('.gu-dropdown-wrap');
+          if (wrap && !wrap.contains(e.target)) {
+            document.getElementById('guDropdownPanel').classList.remove('open');
+            document.getElementById('guDropdownArrow').classList.remove('open');
+            document.removeEventListener('click', closeGuOnOutside);
+          }
+        }
+
+        function guSelectAll() {
+          document.querySelectorAll('#guOptionList input[type=checkbox]').forEach(cb => {
+            cb.checked = true;
+            selectedSigungus.add(cb.value);
+          });
+          updateGuTags();
+          if (isRenderingComplete) applyFilters();
+        }
+
+        function guClearAll() {
+          selectedSigungus.clear();
+          document.querySelectorAll('#guOptionList input[type=checkbox]').forEach(cb => cb.checked = false);
+          updateGuTags();
+          if (isRenderingComplete) applyFilters();
+        }
+
+        function updateGuTags() {
+          const tagArea = document.getElementById('guSelectedTags');
+          const clearBtn = document.getElementById('guClearBtn');
+          const dropBtn  = document.getElementById('guDropdownBtn');
+          if (!tagArea) return;
+          tagArea.innerHTML = '';
+          selectedSigungus.forEach(sg => {
+            const tag = document.createElement('span');
+            tag.className = 'gu-tag';
+            tag.innerHTML = `${sg} <button class="gu-tag-remove" onclick="guRemove('${sg}')" title="제거">✕</button>`;
+            tagArea.appendChild(tag);
+          });
+          const hasSel = selectedSigungus.size > 0;
+          if (clearBtn) clearBtn.style.display = hasSel ? '' : 'none';
+          if (dropBtn)  dropBtn.classList.toggle('has-selection', hasSel);
+        }
+
+        function guRemove(sg) {
+          selectedSigungus.delete(sg);
+          const cb = document.querySelector(`#guOptionList input[value="${sg}"]`);
+          if (cb) cb.checked = false;
+          updateGuTags();
+          if (isRenderingComplete) applyFilters();
+        }
 
         function renderChunk() {
           const cardsContainer = document.getElementById('cards');
@@ -446,6 +614,7 @@
             // 렌더링 완료 - 로딩 인디케이터 숨기기
             if (loadingIndicator) loadingIndicator.style.display = 'none';
             isRenderingComplete = true;
+            buildSigunguDropdown();
             applyFilters();
             console.log('[평형별 순위] 렌더링 완료:', renderedCount, '개');
           }
@@ -457,6 +626,7 @@
 
           cards.forEach(card => {
             const priceMatch = currentRange === 'all' || card.dataset.priceRange === currentRange;
+            const guMatch = selectedSigungus.size === 0 || selectedSigungus.has(card.dataset.sigungu);
             let searchMatch = true;
             if (searchQuery) {
               const cardHeader = card.querySelector('.card-header h3');
@@ -464,7 +634,7 @@
               searchMatch = cardText.includes(searchQuery.toLowerCase());
             }
 
-            if (priceMatch && searchMatch) {
+            if (priceMatch && guMatch && searchMatch) {
               card.style.display = '';
               visibleCount++;
             } else {
